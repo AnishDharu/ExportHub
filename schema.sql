@@ -74,12 +74,29 @@ CREATE TABLE invoice_items (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE exporter (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  address_line1 TEXT,
+  address_line2 TEXT,
+  country TEXT DEFAULT 'INDIA',
+  pan TEXT,
+  iec TEXT,
+  gstin TEXT,
+  state_code TEXT,
+  ad_code TEXT,
+  enduse_code TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 ALTER TABLE consignees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE exporter ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all on consignees" ON consignees FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on products" ON products FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on invoices" ON invoices FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on invoice_items" ON invoice_items FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on exporter" ON exporter FOR ALL USING (true) WITH CHECK (true);

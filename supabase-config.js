@@ -157,6 +157,37 @@ const db = {
     return `INV-${String(lastNum + 1).padStart(5, '0')}`;
   },
 
+  // --- Exporter (single row — upsert pattern) ---
+  async getExporter() {
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient.from('exporter').select('*').limit(1).single();
+      if (!error && data) return data;
+      if (error && error.code !== 'PGRST116') console.error('Supabase error:', error); // PGRST116 = no rows
+    }
+    // fallback to localStorage
+    return JSON.parse(localStorage.getItem('exporterSettings') || 'null');
+  },
+  async saveExporter(exporterData) {
+    if (supabaseClient) {
+      // Check if a row already exists
+      const { data: existing } = await supabaseClient.from('exporter').select('id').limit(1).single();
+      if (existing) {
+        // Update existing row
+        const { data, error } = await supabaseClient.from('exporter').update(exporterData).eq('id', existing.id).select().single();
+        if (!error) return data;
+        console.error('Supabase error:', error);
+      } else {
+        // Insert first row
+        const { data, error } = await supabaseClient.from('exporter').insert(exporterData).select().single();
+        if (!error) return data;
+        console.error('Supabase error:', error);
+      }
+    }
+    // fallback to localStorage
+    localStorage.setItem('exporterSettings', JSON.stringify(exporterData));
+    return exporterData;
+  },
+
   // --- localStorage helpers ---
   _localGet(table) {
     return JSON.parse(localStorage.getItem(`iieg_${table}`) || '[]');

@@ -514,8 +514,8 @@ function getInvoiceProductItems() {
 
 function buildInvoiceObject(items) {
   const total = items.reduce((sum, i) => sum + i.amount, 0);
-  // Load exporter settings
-  const exp = JSON.parse(localStorage.getItem('exporterSettings') || '{}');
+  // Use cached exporter from Supabase (loaded on page init)
+  const exp = cachedExporter || {};
   return {
     invoice_number: document.getElementById('invoice-number').value,
     invoice_date: document.getElementById('invoice-date').value,
@@ -528,9 +528,9 @@ function buildInvoiceObject(items) {
     exporter_pan: exp.pan || '',
     exporter_iec: exp.iec || '',
     exporter_gstin: exp.gstin || '',
-    exporter_ad_code: exp.adCode || '',
-    exporter_state_code: exp.stateCode || '',
-    exporter_enduse_code: exp.endUseCode || '',
+    exporter_ad_code: exp.ad_code || '',
+    exporter_state_code: exp.state_code || '',
+    exporter_enduse_code: exp.enduse_code || '',
     // Consignee details
     customer_name: selectedConsignee.name,
     cons_addr1: selectedConsignee.address_line1 || '',
@@ -688,10 +688,12 @@ function onCurrencyChange() {
 }
 
 // ========================================
-// EXPORTER SETTINGS (localStorage)
+// EXPORTER SETTINGS (Supabase-backed)
 // ========================================
 
-function saveExporter() {
+let cachedExporter = {}; // In-memory cache for buildInvoiceObject
+
+async function saveExporter() {
   const data = {
     name: document.getElementById('exp-name').value.trim(),
     address_line1: document.getElementById('exp-addr1').value.trim(),
@@ -700,16 +702,22 @@ function saveExporter() {
     pan: document.getElementById('exp-pan').value.trim(),
     iec: document.getElementById('exp-iec').value.trim(),
     gstin: document.getElementById('exp-gstin').value.trim(),
-    stateCode: document.getElementById('exp-statecode').value.trim(),
-    adCode: document.getElementById('exp-adcode').value.trim(),
-    endUseCode: document.getElementById('exp-enduse').value.trim()
+    state_code: document.getElementById('exp-statecode').value.trim(),
+    ad_code: document.getElementById('exp-adcode').value.trim(),
+    enduse_code: document.getElementById('exp-enduse').value.trim()
   };
-  localStorage.setItem('exporterSettings', JSON.stringify(data));
+
+  if (!data.name) { showToast('Company name is required', true); return; }
+
+  await db.saveExporter(data);
+  cachedExporter = data;
   showToast('Exporter details saved!');
 }
 
-function loadExporter() {
-  const data = JSON.parse(localStorage.getItem('exporterSettings') || '{}');
+async function loadExporter() {
+  const data = await db.getExporter();
+  if (!data) return;
+  cachedExporter = data;
   if (data.name) document.getElementById('exp-name').value = data.name;
   if (data.address_line1) document.getElementById('exp-addr1').value = data.address_line1;
   if (data.address_line2) document.getElementById('exp-addr2').value = data.address_line2;
@@ -717,7 +725,7 @@ function loadExporter() {
   if (data.pan) document.getElementById('exp-pan').value = data.pan;
   if (data.iec) document.getElementById('exp-iec').value = data.iec;
   if (data.gstin) document.getElementById('exp-gstin').value = data.gstin;
-  if (data.stateCode) document.getElementById('exp-statecode').value = data.stateCode;
-  if (data.adCode) document.getElementById('exp-adcode').value = data.adCode;
-  if (data.endUseCode) document.getElementById('exp-enduse').value = data.endUseCode;
+  if (data.state_code) document.getElementById('exp-statecode').value = data.state_code;
+  if (data.ad_code) document.getElementById('exp-adcode').value = data.ad_code;
+  if (data.enduse_code) document.getElementById('exp-enduse').value = data.enduse_code;
 }

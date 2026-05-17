@@ -14,11 +14,14 @@
   <!-- ===== Header ===== -->
   <header id="app-header">
     <div class="header-content">
-      <div class="header-title">
-        <div class="icon">📄</div>
-        <h1>Invoice Generator</h1>
+      <div class="header-left">
+        <a href="/" class="back-link" title="Back to Home">←</a>
+        <div class="header-title">
+          <div class="icon">🧾</div>
+          <h1>Invoice Generator</h1>
+        </div>
       </div>
-      <div class="header-badge">Import · Export</div>
+      <div class="header-badge">ExportHub</div>
     </div>
   </header>
 
@@ -36,10 +39,10 @@
     <!-- ==================== INVOICE TAB ==================== -->
     <section id="tab-invoice" class="tab-content active">
 
-      <!-- Invoice Header -->
+      <!-- Step 1: Invoice Header -->
       <div class="card">
-        <div class="card-title"><span class="ct-icon">🧾</span> Invoice Details</div>
-        <div class="form-row">
+        <div class="card-title"><span class="step-num">1</span> Invoice Details</div>
+        <div class="form-row form-row-3">
           <div class="form-group">
             <label for="invoice-number">Invoice Number</label>
             <input type="text" id="invoice-number" placeholder="e.g. MI/EXP/CI/10">
@@ -48,24 +51,28 @@
             <label for="invoice-date">Date</label>
             <input type="date" id="invoice-date">
           </div>
-        </div>
-        <div class="form-group">
-          <label for="invoice-currency">Currency</label>
-          <select id="invoice-currency" onchange="onCurrencyChange()">
-            <option value="USD">USD ($)</option>
-            <option value="INR">INR (₹)</option>
-          </select>
+          <div class="form-group">
+            <label for="invoice-currency">Currency</label>
+            <select id="invoice-currency" onchange="onCurrencyChange()">
+              <option value="USD">USD ($)</option>
+              <option value="INR">INR (₹)</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <!-- Consignee Selection -->
+      <!-- Step 2: Consignee Selection -->
       <div class="card">
-        <div class="card-title"><span class="ct-icon">🏢</span> Consignee</div>
-        <div class="form-group">
-          <label for="consignee-select">Select Consignee</label>
-          <select id="consignee-select" onchange="onConsigneeSelect(this)">
-            <option value="">— Select Consignee —</option>
-          </select>
+        <div class="card-title"><span class="step-num">2</span> Consignee</div>
+        <div class="consignee-row">
+          <div class="form-group" style="flex:1;margin-bottom:0">
+            <select id="consignee-select" onchange="onConsigneeSelect(this)">
+              <option value="">— Select Consignee —</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openConsigneeModal()" style="white-space:nowrap">
+            ➕ New
+          </button>
         </div>
         <div id="selected-consignee-info" class="customer-selected hidden">
           <div>
@@ -74,71 +81,67 @@
           </div>
           <button class="clear-btn" onclick="clearConsigneeSelection()" title="Clear">✕</button>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="openConsigneeModal()" style="margin-top:4px">
-          ➕ New Consignee
-        </button>
       </div>
 
-      <!-- Products (from master) -->
+      <!-- Step 3: Products -->
       <div class="card">
-        <div class="card-title"><span class="ct-icon">📦</span> Products</div>
+        <div class="card-title"><span class="step-num">3</span> Products</div>
         <div id="invoice-product-list"></div>
 
-        <!-- Add product from master -->
-        <div class="form-row" style="margin-top:10px; align-items:flex-end;">
-          <div class="form-group" style="margin-bottom:0">
-            <label for="add-product-select">Select Product</label>
-            <select id="add-product-select">
-              <option value="">— Choose Product —</option>
-            </select>
-          </div>
-          <button class="btn btn-secondary" onclick="addProductFromMaster()" style="height:46px">
+        <div class="product-add-bar">
+          <select id="add-product-select" style="flex:1">
+            <option value="">— Choose Product —</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="addProductFromMaster()">
             ➕ Add
           </button>
-        </div>
-        <div style="text-align:center; margin-top:10px;">
           <button class="btn btn-secondary btn-sm" onclick="addCustomProductRow()">
-            ✏️ Add Custom Product
+            ✏️ Custom
           </button>
         </div>
       </div>
 
-      <!-- Shipping Details -->
-      <div class="card">
-        <div class="card-title"><span class="ct-icon">🚢</span> Shipping Details</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="inv-supplier-ref">Supplier's Ref</label>
-            <input type="text" id="inv-supplier-ref" placeholder="Ref number">
-          </div>
-          <div class="form-group">
-            <label for="inv-despatched">Despatched Through</label>
-            <input type="text" id="inv-despatched" placeholder="e.g. NHAVA-SHEVA MUM">
-          </div>
+      <!-- Step 4: Shipping (Collapsible) -->
+      <div class="card card-collapsible">
+        <div class="card-title card-toggle" onclick="this.parentElement.classList.toggle('collapsed')">
+          <span class="step-num">4</span> Shipping Details
+          <span class="toggle-arrow">▾</span>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="inv-container">Container Details</label>
-            <input type="text" id="inv-container" placeholder="e.g. 20FT X 1 CONTAINER">
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inv-supplier-ref">Supplier's Ref</label>
+              <input type="text" id="inv-supplier-ref" placeholder="Ref number">
+            </div>
+            <div class="form-group">
+              <label for="inv-despatched">Despatched Through</label>
+              <input type="text" id="inv-despatched" placeholder="e.g. NHAVA-SHEVA MUM">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inv-container">Container Details</label>
+              <input type="text" id="inv-container" placeholder="e.g. 20FT X 1 CONTAINER">
+            </div>
+            <div class="form-group">
+              <label for="inv-num-pkgs">No. & Kind of Pkgs</label>
+              <input type="text" id="inv-num-pkgs" placeholder="e.g. 960 CARTONS">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inv-net-wt">Net Weight (Kg)</label>
+              <input type="number" id="inv-net-wt" placeholder="0.00" step="any">
+            </div>
+            <div class="form-group">
+              <label for="inv-gross-wt">Gross Weight (Kg)</label>
+              <input type="number" id="inv-gross-wt" placeholder="0.00" step="any">
+            </div>
           </div>
           <div class="form-group">
-            <label for="inv-num-pkgs">No. & Kind of Pkgs</label>
-            <input type="text" id="inv-num-pkgs" placeholder="e.g. 960 CARTONS">
+            <label for="inv-product-notes">Product Details (Packaging, Batch, Ingredients)</label>
+            <textarea id="inv-product-notes" rows="3" placeholder="e.g. 250gm PET bottle with cap&#10;Batch No: B09205&#10;Dt Mfg: 20.09.2025&#10;Dt Exp: 19.09.2027"></textarea>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="inv-net-wt">Net Weight (Kg)</label>
-            <input type="number" id="inv-net-wt" placeholder="0.00" step="any">
-          </div>
-          <div class="form-group">
-            <label for="inv-gross-wt">Gross Weight (Kg)</label>
-            <input type="number" id="inv-gross-wt" placeholder="0.00" step="any">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="inv-product-notes">Product Details (Packaging, Batch, Ingredients)</label>
-          <textarea id="inv-product-notes" rows="4" placeholder="e.g. 250gm PET bottle with cap&#10;Batch No: B09205&#10;Dt Mfg: 20.09.2025&#10;Dt Exp: 19.09.2027"></textarea>
         </div>
       </div>
 
@@ -154,12 +157,12 @@
         <div id="amount-words" style="font-size:13px; font-weight:500; color:var(--accent);">Zero Only</div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="btn-group">
-        <button class="btn btn-primary btn-block" onclick="previewInvoice()" id="btn-preview">
-          👁️ Preview Invoice
+      <!-- Action Buttons (sticky) -->
+      <div class="action-bar">
+        <button class="btn btn-primary" onclick="previewInvoice()" id="btn-preview">
+          👁️ Preview
         </button>
-        <button class="btn btn-secondary btn-block" onclick="downloadExcel()" id="btn-download">
+        <button class="btn btn-accent" onclick="downloadExcel()" id="btn-download">
           📥 Download Excel
         </button>
       </div>

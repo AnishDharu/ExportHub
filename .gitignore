@@ -2,4 +2,3 @@ node_modules
 .env
 .png
 ~$INVOICE PL.xlsx
-.DS_Store

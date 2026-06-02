@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart CBM & Container Loading Calculator — ExportHub</title>
+  <meta name="description" content="Professional container loading calculator for freight forwarders and exporters. CBM, payload, 3D visualization, multi-carton mode.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════
+       Smart CBM Calculator — Professional Logistics UI
+       ═══════════════════════════════════════════════ */
+    :root {
+      --bg:       #070b14;
+      --bg2:      #0c1120;
+      --bg3:      #101828;
+      --card:     rgba(16, 24, 40, 0.82);
+      --card2:    rgba(22, 34, 58, 0.7);
+      --border:   rgba(55, 75, 110, 0.35);
+      --bhi:      rgba(34, 211, 238, 0.3);
+      --t1:       #eef2ff;
+      --t2:       #8fa8c8;
+      --t3:       #4a6080;
+      --t4:       #2a3a52;
+      --cyan:     #22d3ee;
+      --green:    #10b981;
+      --green2:   #34d399;
+      --amber:    #f59e0b;
+      --red:      #ef4444;
+      --red2:     #f87171;
+      --purple:   #8b5cf6;
+      --purple2:  #a78bfa;
+      --blue:     #3b82f6;
+      --blue2:    #60a5fa;
+      --grad:     linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
+      --grad2:    linear-gradient(135deg, #10b981 0%, #22d3ee 100%);
+      --grad3:    linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+      --r:        12px;
+      --r2:       8px;
+      --tr:       0.2s ease;
+      --shadow:   0 4px 24px rgba(0,0,0,0.5);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--t1);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(55,75,110,0.6); border-radius: 3px; }
+
+    /* ─── TOPBAR ─── */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 58px;
+      background: rgba(7,11,20,0.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+    }
+    .topbar-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--t1);
+      font-size: 17px; font-weight: 800; letter-spacing: -.4px;
+      flex-shrink: 0;
+    }
+    .topbar-logo .li { font-size: 22px; filter: drop-shadow(0 0 8px rgba(34,211,238,.5)); }
+    .lac { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .topbar-divider { width: 1px; height: 24px; background: var(--border); }
+    .topbar-title { font-size: 13px; font-weight: 600; color: var(--t2); flex: 1; }
+    .topbar-chip {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.2px; padding: 4px 12px;
+      border-radius: 20px; border: 1px solid var(--bhi);
+      color: var(--cyan); background: rgba(34,211,238,0.07);
+    }
+    .topbar-back {
+      text-decoration: none; color: var(--t3); font-size: 12px; font-weight: 500;
+      padding: 6px 12px; border-radius: var(--r2);
+      border: 1px solid var(--border); background: rgba(16,24,40,.5);
+      transition: var(--tr); flex-shrink: 0;
+    }
+    .topbar-back:hover { color: var(--cyan); border-color: var(--bhi); }
+
+    /* ─── PAGE ─── */
+    .page { padding-top: 58px; }
+    .page-inner { max-width: 1500px; margin: 0 auto; padding: 24px 20px 80px; }
+
+    /* ─── PAGE HEADER ─── */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+    }
+    .page-header h1 {
+      font-size: clamp(20px, 2.5vw, 28px); font-weight: 900;
+      letter-spacing: -.6px; line-height: 1.2;
+    }
+    .page-header h1 span { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-header p { font-size: 13px; color: var(--t3); margin-top: 4px; }
+
+    /* ─── MAIN GRID ─── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+    .card-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .ch-left { display: flex; align-items: center; gap: 8px; }
+    .ch-icon { font-size: 16px; }
+    .ch-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--t2); }
+    .ch-badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px;
+      border-radius: 6px; border: 1px solid;
+    }
+    .badge-cyan  { color: var(--cyan);   border-color: rgba(34,211,238,.3);  background: rgba(34,211,238,.08);  }
+    .badge-green { color: var(--green2); border-color: rgba(52,211,153,.3);  background: rgba(52,211,153,.08);  }
+    .badge-amber { color: var(--amber);  border-color: rgba(245,158,11,.3);  background: rgba(245,158,11,.08);  }
+    .badge-red   { color: var(--red2);   border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.08); }
+    .badge-purple{ color: var(--purple2);border-color: rgba(167,139,250,.3); background: rgba(167,139,250,.08); }
+    .card-body { padding: 18px; }
+
+    /* ─── UNIT TOGGLE ─── */
+    .pill-row { display: flex; gap: 3px; background: rgba(0,0,0,.35); border-radius: var(--r2); padding: 3px; }
+    .pill-btn {
+      flex: 1; padding: 7px 6px; border: none; cursor: pointer;
+      border-radius: 6px; font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 600; color: var(--t3);
+      background: transparent; transition: var(--tr);
+    }
+    .pill-btn.active { background: rgba(34,211,238,.14); color: var(--cyan); }
+    .pill-btn:hover:not(.active) { color: var(--t2); }
+
+    /* ─── INPUTS ─── */
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label {
+      font-size: 11px; font-weight: 600; color: var(--t3);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .form-group label .lbadge {
+      font-size: 9px; font-weight: 700; padding: 1px 6px;
+      border-radius: 4px; background: rgba(34,211,238,.1); color: var(--cyan);
+    }
+    input[type="number"], input[type="text"], select, textarea {
+      background: rgba(0,0,0,.4);
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      padding: 10px 13px;
+      color: var(--t1); font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 600;
+      width: 100%; outline: none; transition: var(--tr);
+    }
+    input:focus, select:focus { border-color: var(--bhi); box-shadow: 0 0 0 3px rgba(34,211,238,.06); }
+    input::-webkit-inner-spin-button { opacity: 0; }
+    input::placeholder { color: var(--t3); font-weight: 400; font-size: 13px; }
+    select { cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234a6080' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+    }
+    select option { background: #0c1120; color: var(--t1); }
+    .input-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .input-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+    /* ─── SECTION LABEL ─── */
+    .slabel {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.1px; color: var(--t3); margin-bottom: 10px;
+    }
+    .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+    /* ─── CONTAINER TYPE CARDS ─── */
+    .con-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .con-option {
+      padding: 12px 8px; border-radius: 10px; cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.25);
+      text-align: center; transition: var(--tr);
+      position: relative; overflow: hidden;
+    }
+    .con-option:hover { border-color: rgba(55,75,110,.6); }
+    .con-option.active {
+      border-color: var(--bhi);
+      background: rgba(34,211,238,.07);
+      box-shadow: 0 0 0 1px rgba(34,211,238,.12);
+    }
+    .con-option .co-emoji { font-size: 20px; display: block; margin-bottom: 5px; }
+    .con-option .co-name  { font-size: 12px; font-weight: 700; display: block; }
+    .con-option .co-cbm   { font-size: 10px; color: var(--t3); display: block; margin-top: 2px; }
+    .con-option.active .co-name { color: var(--cyan); }
+    .con-option.active .co-cbm  { color: rgba(34,211,238,.6); }
+    .con-rec-badge {
+      position: absolute; top: 4px; right: 4px;
+      font-size: 8px; font-weight: 800; text-transform: uppercase;
+      background: var(--green); color: #070b14;
+      padding: 2px 5px; border-radius: 4px; letter-spacing: .5px;
+    }
+
+    /* ─── MULTI-CARTON TABLE ─── */
+    .mc-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+    .mc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .mc-table th {
+      text-align: left; padding: 9px 12px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+      color: var(--t3); border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,.2); white-space: nowrap;
+    }
+    .mc-table td {
+      padding: 10px 12px; border-bottom: 1px solid rgba(55,75,110,.2);
+      color: var(--t2); vertical-align: middle;
+    }
+    .mc-table tr:last-child td { border-bottom: none; }
+    .mc-table tr:hover td { color: var(--t1); background: rgba(34,211,238,.025); }
+    .mc-table td.td-name { color: var(--t1); font-weight: 600; }
+    .mc-table td.td-cbm  { color: var(--cyan); font-weight: 700; }
+    .mc-table td.td-fit  { color: var(--green2); font-weight: 700; }
+    .del-btn {
+      background: none; border: none; cursor: pointer; color: var(--t3);
+      font-size: 13px; padding: 3px 6px; border-radius: 5px; transition: var(--tr);
+    }
+    .del-btn:hover { color: var(--red2); background: rgba(248,113,113,.1); }
+    .mc-empty { padding: 24px; text-align: center; color: var(--t3); font-size: 13px; }
+
+    /* ─── CALCULATE BTN ─── */
+    .calc-btn {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: var(--grad); color: #070b14;
+      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 800;
+      cursor: pointer; transition: var(--tr);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      letter-spacing: -.2px;
+    }
+    .calc-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(34,211,238,.28); }
+    .calc-btn:active { transform: translateY(0); }
+    .btn-sm {
+      padding: 8px 14px; border-radius: var(--r2); font-size: 12px; font-weight: 700;
+      border: 1px solid; cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: var(--tr); display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn-add { color: var(--green2); border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.08); }
+    .btn-add:hover { background: rgba(52,211,153,.16); }
+    .btn-clear { color: var(--red2); border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.06); }
+    .btn-clear:hover { background: rgba(248,113,113,.12); }
+    .btn-export { color: var(--blue2); border-color: rgba(96,165,250,.35); background: rgba(96,165,250,.08); }
+    .btn-export:hover { background: rgba(96,165,250,.16); }
+
+    /* ─── RIGHT COLUMN ─── */
+    .right-col { display: flex; flex-direction: column; gap: 18px; }
+
+    /* ─── BIG ANSWER CARD ─── */
+    .answer-hero {
+      background: var(--card);
+      border: 1px solid rgba(34,211,238,.22);
+      border-radius: var(--r);
+      backdrop-filter: blur(16px);
+      padding: 28px 24px;
+      position: relative; overflow: hidden;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 24px; align-items: center;
+    }
+    @media (max-width: 700px) { .answer-hero { grid-template-columns: 1fr; } }
+    .answer-hero::before {
+      content: ''; position: absolute;
+      top: -80px; left: -80px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(34,211,238,.08), transparent 65%);
+      pointer-events: none;
+    }
+    .answer-hero::after {
+      content: ''; position: absolute;
+      bottom: -80px; right: -80px;
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(139,92,246,.07), transparent 65%);
+      pointer-events: none;
+    }
+    .ah-main { position: relative; }
+    .ah-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--t3); margin-bottom: 6px; }
+    .ah-number { font-size: 68px; font-weight: 900; line-height: 1; letter-spacing: -3px; color: var(--cyan); margin-bottom: 8px; }
+    .ah-sub { font-size: 14px; color: var(--t2); }
+    .ah-sub strong { color: var(--t1); }
+    .ah-limit {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 10px; padding: 6px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 600;
+      background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3);
+      color: var(--amber);
+    }
+    .ah-limit.by-space { background: rgba(34,211,238,.08); border-color: rgba(34,211,238,.25); color: var(--cyan); }
+    .ah-limit.by-weight { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.3); color: var(--amber); }
+    .ah-limit.by-both { background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.3); color: var(--green2); }
+
+    /* ─── DUAL METERS ─── */
+    .meters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; position: relative; }
+    .meter-card {
+      background: rgba(0,0,0,.3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px;
+    }
+    .meter-card.active-limit { border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.04); }
+    .meter-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .meter-label { font-size: 11px; font-weight: 700; color: var(--t3); }
+    .meter-pct { font-size: 18px; font-weight: 800; }
+    .meter-track { height: 8px; background: rgba(0,0,0,.5); border-radius: 4px; overflow: hidden; }
+    .meter-fill { height: 100%; border-radius: 4px; transition: width .7s cubic-bezier(.4,0,.2,1); min-width: 2px; }
+    .meter-fill.space { background: var(--grad); }
+    .meter-fill.weight { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+    .meter-fill.over { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .meter-detail { font-size: 11px; color: var(--t3); margin-top: 8px; line-height: 1.6; }
+
+    /* ─── STATS GRID ─── */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      backdrop-filter: blur(12px);
+    }
+    .stat-card .sc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--t3); margin-bottom: 6px; }
+    .stat-card .sc-val { font-size: 20px; font-weight: 800; }
+    .stat-card .sc-unit { font-size: 11px; color: var(--t3); margin-top: 2px; }
+    .stat-card .sc-sub { font-size: 11px; color: var(--t3); margin-top: 4px; }
+
+    /* ─── ARRANGEMENT BOX ─── */
+    .arrange-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r); backdrop-filter: blur(12px); padding: 18px 20px;
+    }
+    .arrange-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; flex-wrap: wrap;
+    }
+    .ar-block { text-align: center; min-width: 56px; }
+    .ar-num { font-size: 36px; font-weight: 900; line-height: 1; }
+    .ar-label { font-size: 10px; color: var(--t3); margin-top: 3px; font-weight: 600; }
+    .ar-op { font-size: 24px; color: var(--t4); padding: 0 2px; margin-top: -8px; }
+    .arrange-caption { font-size: 12px; color: var(--t3); text-align: center; margin-top: 12px; }
+    .arrange-caption strong { color: var(--t2); }
+
+    /* ─── RECOMMENDATION CARD ─── */
+    .rec-card {
+      background: linear-gradient(135deg, rgba(16,185,129,.08), rgba(34,211,238,.06));
+      border: 1px solid rgba(16,185,129,.25);
+      border-radius: var(--r); padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .rec-icon { font-size: 32px; flex-shrink: 0; }
+    .rec-title { font-size: 13px; font-weight: 700; color: var(--green2); margin-bottom: 4px; }
+    .rec-text { font-size: 12px; color: var(--t2); line-height: 1.6; }
+
+    /* ─── CONTAINER SPECS TABLE ─── */
+    .specs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .specs-table th {
+      text-align: left; padding: 8px 12px; color: var(--t3);
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .specs-table td {
+      padding: 10px 12px; border-bottom: 1px solid rgba(55,75,110,.2);
+      color: var(--t2);
+    }
+    .specs-table tr.active-row td { background: rgba(34,211,238,.04); color: var(--t1); }
+    .specs-table tr:last-child td { border-bottom: none; }
+    .spec-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .spec-badge.selected { background: rgba(34,211,238,.15); color: var(--cyan); border: 1px solid rgba(34,211,238,.3); }
+    .spec-badge.rec { background: rgba(16,185,129,.15); color: var(--green2); border: 1px solid rgba(16,185,129,.3); }
+
+    /* ─── 3D VISUALIZER ─── */
+    .viz-wrap {
+      position: relative; overflow: hidden;
+      height: 460px; cursor: grab; background: rgba(0,0,0,.2);
+    }
+    .viz-wrap:active { cursor: grabbing; }
+    #viz { display: block; width: 100%; height: 100%; }
+    .viz-overlay {
+      position: absolute; top: 12px; left: 12px;
+      display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+    }
+    .vtag {
+      font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 5px;
+      backdrop-filter: blur(10px); border: 1px solid;
+    }
+    .vtag.c { color: var(--cyan);   border-color: rgba(34,211,238,.25); background: rgba(7,11,20,.85); }
+    .vtag.g { color: var(--green2); border-color: rgba(52,211,153,.25);  background: rgba(7,11,20,.85); }
+    .vtag.a { color: var(--amber);  border-color: rgba(245,158,11,.25);  background: rgba(7,11,20,.85); }
+    .viz-btns { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+    .viz-hint { position: absolute; bottom: 12px; left: 12px; font-size: 10px; color: var(--t3); pointer-events: none; }
+    .viz-reset { position: absolute; bottom: 12px; right: 12px; }
+    .vbtn {
+      padding: 5px 11px; border-radius: var(--r2); font-size: 11px; font-weight: 600;
+      border: 1px solid var(--border); background: rgba(7,11,20,.85);
+      color: var(--t2); cursor: pointer; transition: var(--tr);
+      font-family: 'Inter', sans-serif; backdrop-filter: blur(10px);
+    }
+    .vbtn:hover { color: var(--t1); }
+    .vbtn.active { color: var(--cyan); border-color: var(--bhi); background: rgba(34,211,238,.1); }
+
+    /* ─── FREIGHT PLANNER DASHBOARD ─── */
+    .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr 1fr; } }
+    .dash-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px;
+      backdrop-filter: blur(12px);
+    }
+    .dc-icon { font-size: 22px; margin-bottom: 8px; }
+    .dc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--t3); margin-bottom: 4px; }
+    .dc-val { font-size: 22px; font-weight: 800; }
+    .dc-sub { font-size: 11px; color: var(--t3); margin-top: 3px; }
+
+    /* ─── MULTI RESULT TABLE ─── */
+    .mres-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .mres-table th {
+      text-align: left; padding: 9px 12px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+      color: var(--t3); border-bottom: 1px solid var(--border); background: rgba(0,0,0,.15);
+    }
+    .mres-table td {
+      padding: 10px 12px; border-bottom: 1px solid rgba(55,75,110,.18);
+      color: var(--t2);
+    }
+    .mres-table tr:last-child td { border-bottom: none; }
+
+    /* ─── EMPTY / PLACEHOLDER ─── */
+    .placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; padding: 60px 20px; color: var(--t3); text-align: center;
+    }
+    .placeholder .ph-icon { font-size: 52px; opacity: .3; }
+    .placeholder p { font-size: 14px; line-height: 1.7; max-width: 320px; }
+    .placeholder strong { color: var(--t2); }
+
+    /* ─── ALERT ─── */
+    .alert {
+      padding: 12px 16px; border-radius: 9px; font-size: 12px; line-height: 1.6;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .alert.warn { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); color: var(--amber); }
+    .alert.info { background: rgba(34,211,238,.07); border: 1px solid rgba(34,211,238,.2); color: var(--cyan); }
+    .alert.success { background: rgba(16,185,129,.07); border: 1px solid rgba(16,185,129,.2); color: var(--green2); }
+    .alert.err { background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2); color: var(--red2); }
+
+    /* ─── TABS ─── */
+    .tab-row { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      padding: 11px 16px; border: none; border-bottom: 2px solid transparent;
+      background: none; color: var(--t3); font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--tr);
+      margin-bottom: -1px;
+    }
+    .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .tab-btn:hover:not(.active) { color: var(--t2); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ─── TOAST ─── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      padding: 12px 20px; border-radius: 10px;
+      background: rgba(12,17,32,.97); font-size: 13px; font-weight: 600;
+      backdrop-filter: blur(16px); box-shadow: var(--shadow);
+      transform: translateY(60px); opacity: 0;
+      transition: all .4s cubic-bezier(.34,1.56,.64,1);
+      border: 1px solid;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.s { color: var(--green2); border-color: rgba(52,211,153,.3); }
+    .toast.w { color: var(--amber);  border-color: rgba(245,158,11,.3); }
+    .toast.e { color: var(--red2);   border-color: rgba(248,113,113,.3); }
+
+    @media (max-width: 600px) {
+      .topbar-title { display: none; }
+      .topbar-divider { display: none; }
+      .page-inner { padding: 16px 12px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── TOPBAR ─── -->
+<div class="topbar">
+  <a href="/" class="topbar-logo">
+    <span class="li">📦</span>
+    Export<span class="lac">Hub</span>
+  </a>
+  <div class="topbar-divider"></div>
+  <span class="topbar-title">Smart CBM & Container Loading Calculator</span>
+  <span class="topbar-chip">Logistics Pro</span>
+  <a href="/" class="topbar-back">← Home</a>
+</div>
+
+<div class="page">
+<div class="page-inner">
+
+  <div class="page-header">
+    <div>
+      <h1>Smart CBM &amp; <span>Container Loading Calculator</span></h1>
+      <p>Professional logistics planning tool — space + payload analysis, 3D visualization, multi-carton mode</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-sm btn-export" onclick="exportResults()">⬇ Export PDF / CSV</button>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- ═══════════════ LEFT PANEL ═══════════════ -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- ── CARTON INPUT ── -->
+      <div class="card">
+        <div class="card-head">
+          <div class="ch-left">
+            <span class="ch-icon">📦</span>
+            <span class="ch-title">Carton Specifications</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn-sm btn-add" id="btn-add-mc" onclick="addCartonToList()" title="Add to multi-carton list">+ Add</button>
+          </div>
+        </div>
+        <div class="card-body">
+
+          <!-- Dimension unit -->
+          <div class="slabel">Dimension Unit</div>
+          <div class="pill-row" style="margin-bottom:14px">
+            <button class="pill-btn active" id="du-cm" onclick="setDimUnit('cm')">cm</button>
+            <button class="pill-btn" id="du-mm" onclick="setDimUnit('mm')">mm</button>
+            <button class="pill-btn" id="du-m"  onclick="setDimUnit('m')">m</button>
+          </div>
+
+          <!-- Name -->
+          <div class="form-group" style="margin-bottom:12px">
+            <label>Carton / Item Name <span class="lbadge">optional</span></label>
+            <input type="text" id="c-name" placeholder="e.g. Export Carton A">
+          </div>
+
+          <!-- Dimensions -->
+          <div class="slabel">Dimensions (<span id="dim-unit-label">cm</span>)</div>
+          <div class="input-row3" style="margin-bottom:12px">
+            <div class="form-group">
+              <label>Length</label>
+              <input type="number" id="c-l" placeholder="0" min="0.001" step="0.001" oninput="liveUpdate()">
+            </div>
+            <div class="form-group">
+              <label>Width</label>
+              <input type="number" id="c-w" placeholder="0" min="0.001" step="0.001" oninput="liveUpdate()">
+            </div>
+            <div class="form-group">
+              <label>Height</label>
+              <input type="number" id="c-h" placeholder="0" min="0.001" step="0.001" oninput="liveUpdate()">
+            </div>
+          </div>
+
+          <!-- Weight + Quantity -->
+          <div class="slabel">Weight &amp; Quantity</div>
+          <div class="input-row3" style="margin-bottom:12px">
+            <div class="form-group">
+              <label>Qty (pcs)</label>
+              <input type="number" id="c-qty" placeholder="1" min="1" step="1" value="1" oninput="liveUpdate()">
+            </div>
+            <div class="form-group">
+              <label>Wgt / carton</label>
+              <input type="number" id="c-wgt" placeholder="0.0" min="0" step="0.01" oninput="liveUpdate()">
+            </div>
+            <div class="form-group">
+              <label>Unit</label>
+              <select id="wgt-unit" onchange="liveUpdate()">
+                <option value="kg">kg</option>
+                <option value="lbs">lbs</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Live preview -->
+          <div style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.14);border-radius:9px;padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <div class="slabel" style="margin-bottom:3px">CBM / carton</div>
+              <div style="font-size:18px;font-weight:800;color:var(--cyan)" id="prev-cbm">—</div>
+            </div>
+            <div>
+              <div class="slabel" style="margin-bottom:3px">Total CBM (qty)</div>
+              <div style="font-size:18px;font-weight:800;color:var(--green2)" id="prev-total-cbm">—</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── CONTAINER SELECTION ── -->
+      <div class="card">
+        <div class="card-head">
+          <div class="ch-left">
+            <span class="ch-icon">🚢</span>
+            <span class="ch-title">Container Type</span>
+          </div>
+          <span class="ch-badge badge-cyan" id="con-badge-selected">20' Standard</span>
+        </div>
+        <div class="card-body">
+
+          <div class="con-grid" style="margin-bottom:14px">
+            <div class="con-option active" id="co-20st" onclick="selectCon('20st')">
+              <span class="co-emoji">🟦</span>
+              <span class="co-name">20' Standard</span>
+              <span class="co-cbm">33.2 CBM</span>
+            </div>
+            <div class="con-option" id="co-40st" onclick="selectCon('40st')">
+              <span class="co-emoji">🟩</span>
+              <span class="co-name">40' Standard</span>
+              <span class="co-cbm">67.7 CBM</span>
+            </div>
+            <div class="con-option" id="co-40hc" onclick="selectCon('40hc')">
+              <span class="co-emoji">🟪</span>
+              <span class="co-name">40' High Cube</span>
+              <span class="co-cbm">76.3 CBM</span>
+            </div>
+          </div>
+
+          <!-- Editable container dims -->
+          <div class="slabel" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Internal Dimensions (cm)</span>
+            <button onclick="resetConDims()" style="font-size:10px;font-weight:600;color:var(--cyan);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif">↺ Reset</button>
+          </div>
+          <div class="input-row3" style="margin-bottom:10px">
+            <div class="form-group"><label>Length</label><input type="number" id="k-l" oninput="liveUpdate()"></div>
+            <div class="form-group"><label>Width</label><input type="number" id="k-w" oninput="liveUpdate()"></div>
+            <div class="form-group"><label>Height</label><input type="number" id="k-h" oninput="liveUpdate()"></div>
+          </div>
+          <div class="input-row2">
+            <div class="form-group"><label>Max Payload (kg)</label><input type="number" id="k-payload" oninput="liveUpdate()"></div>
+            <div class="form-group"><label>Gross CBM</label><input type="number" id="k-cbm-disp" readonly style="color:var(--cyan);cursor:default;opacity:.8"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── MULTI-CARTON MODE ── -->
+      <div class="card">
+        <div class="card-head">
+          <div class="ch-left">
+            <span class="ch-icon">📋</span>
+            <span class="ch-title">Multi-Carton Shipment</span>
+          </div>
+          <span class="ch-badge badge-green" id="mc-count-badge">0 items</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div id="mc-empty" class="mc-empty">
+            Click <strong style="color:var(--green2)">+ Add</strong> above to add this carton to a multi-carton shipment list.
+          </div>
+          <div class="mc-table-wrap" id="mc-table-wrap" style="display:none">
+            <table class="mc-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Name</th><th>L×W×H (cm)</th>
+                  <th>Qty</th><th>CBM/unit</th><th>Total CBM</th><th>Wgt (kg)</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="mc-tbody"></tbody>
+            </table>
+          </div>
+          <div style="padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn-sm btn-clear" onclick="clearMC()">🗑 Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CALCULATE ── -->
+      <button class="calc-btn" onclick="calculate()">
+        ⚡ Calculate Loading Plan
+      </button>
+
+    </div>
+    <!-- ═══════════════ END LEFT ═══════════════ -->
+
+    <!-- ═══════════════ RIGHT PANEL ═══════════════ -->
+    <div class="right-col" id="right-col">
+
+      <!-- Empty state -->
+      <div class="card" id="empty-state">
+        <div class="placeholder">
+          <div class="ph-icon">🚢</div>
+          <p>Enter your carton dimensions and click <strong>Calculate Loading Plan</strong> to see the full container analysis.</p>
+        </div>
+      </div>
+
+      <!-- Results (hidden until calculated) -->
+      <div id="result-area" style="display:none;display:flex;flex-direction:column;gap:18px">
+
+        <!-- Smart Recommendation -->
+        <div class="rec-card" id="rec-card">
+          <div class="rec-icon">🏆</div>
+          <div>
+            <div class="rec-title" id="rec-title">Smart Recommendation</div>
+            <div class="rec-text" id="rec-text">—</div>
+          </div>
+        </div>
+
+        <!-- BIG ANSWER -->
+        <div class="answer-hero">
+          <div class="ah-main">
+            <div class="ah-label">Actual Loadable Cartons</div>
+            <div class="ah-number" id="ans-num">0</div>
+            <div class="ah-sub" id="ans-sub">per container</div>
+            <div class="ah-limit" id="ans-limit">—</div>
+          </div>
+          <div class="meters-grid">
+            <div class="meter-card" id="meter-space">
+              <div class="meter-top">
+                <span class="meter-label">📐 Space</span>
+                <span class="meter-pct" id="mpct-space" style="color:var(--cyan)">0%</span>
+              </div>
+              <div class="meter-track"><div class="meter-fill space" id="mfill-space" style="width:0%"></div></div>
+              <div class="meter-detail" id="mdet-space">—</div>
+            </div>
+            <div class="meter-card" id="meter-weight">
+              <div class="meter-top">
+                <span class="meter-label">⚖️ Payload</span>
+                <span class="meter-pct" id="mpct-weight" style="color:var(--amber)">0%</span>
+              </div>
+              <div class="meter-track"><div class="meter-fill weight" id="mfill-weight" style="width:0%"></div></div>
+              <div class="meter-detail" id="mdet-weight">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ARRANGEMENT -->
+        <div class="arrange-card">
+          <div class="slabel" style="margin-bottom:14px;text-align:center">Loading Arrangement (Best Orientation)</div>
+          <div class="arrange-row">
+            <div class="ar-block">
+              <div class="ar-num" id="ar-l" style="color:var(--cyan)">0</div>
+              <div class="ar-label">along length</div>
+            </div>
+            <div class="ar-op">×</div>
+            <div class="ar-block">
+              <div class="ar-num" id="ar-w" style="color:var(--green2)">0</div>
+              <div class="ar-label">along width</div>
+            </div>
+            <div class="ar-op">×</div>
+            <div class="ar-block">
+              <div class="ar-num" id="ar-h" style="color:var(--purple2)">0</div>
+              <div class="ar-label">stack layers</div>
+            </div>
+            <div class="ar-op">=</div>
+            <div class="ar-block">
+              <div class="ar-num" id="ar-total" style="color:var(--amber)">0</div>
+              <div class="ar-label">by space</div>
+            </div>
+          </div>
+          <div class="arrange-caption" id="ar-caption">—</div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="sc-label">Containers Needed</div>
+            <div class="sc-val" style="color:var(--cyan)" id="s-cons">—</div>
+            <div class="sc-sub" id="s-cons-sub">for full qty</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Total Carton CBM</div>
+            <div class="sc-val" style="color:var(--green2)" id="s-cbm">—</div>
+            <div class="sc-unit">m³</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Total Weight</div>
+            <div class="sc-val" style="color:var(--purple2)" id="s-wgt">—</div>
+            <div class="sc-unit" id="s-wgt-unit">kg</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Remaining CBM</div>
+            <div class="sc-val" style="color:var(--amber)" id="s-rem-cbm">—</div>
+            <div class="sc-unit">m³ unused</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Remaining Payload</div>
+            <div class="sc-val" style="color:var(--blue2)" id="s-rem-wgt">—</div>
+            <div class="sc-unit">kg capacity left</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Overflow Cartons</div>
+            <div class="sc-val" style="color:var(--red2)" id="s-overflow">—</div>
+            <div class="sc-sub">need next container</div>
+          </div>
+        </div>
+
+        <!-- FREIGHT PLANNER DASHBOARD -->
+        <div class="card">
+          <div class="card-head">
+            <div class="ch-left"><span class="ch-icon">📊</span><span class="ch-title">Freight Planner Dashboard</span></div>
+          </div>
+          <div class="card-body">
+            <div class="dash-grid">
+              <div class="dash-card">
+                <div class="dc-icon">📦</div>
+                <div class="dc-label">Total Cartons</div>
+                <div class="dc-val" style="color:var(--cyan)" id="d-cartons">—</div>
+                <div class="dc-sub" id="d-cartons-sub">entered</div>
+              </div>
+              <div class="dash-card">
+                <div class="dc-icon">📐</div>
+                <div class="dc-label">Total CBM</div>
+                <div class="dc-val" style="color:var(--green2)" id="d-cbm">—</div>
+                <div class="dc-sub">m³ total volume</div>
+              </div>
+              <div class="dash-card">
+                <div class="dc-icon">⚖️</div>
+                <div class="dc-label">Total Weight</div>
+                <div class="dc-val" style="color:var(--purple2)" id="d-wgt">—</div>
+                <div class="dc-sub">gross weight</div>
+              </div>
+              <div class="dash-card">
+                <div class="dc-icon">🚢</div>
+                <div class="dc-label">Recommended</div>
+                <div class="dc-val" style="color:var(--amber);font-size:16px" id="d-rec">—</div>
+                <div class="dc-sub">container type</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Container reference table -->
+            <div class="slabel">Container Specifications Reference</div>
+            <table class="specs-table">
+              <thead>
+                <tr><th>Type</th><th>Internal (cm)</th><th>Max Payload</th><th>Volume</th><th>Space Fit</th><th>Weight Fit</th><th>Actual Fit</th><th>Status</th></tr>
+              </thead>
+              <tbody id="specs-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3D VISUALIZER -->
+        <div class="card">
+          <div class="card-head">
+            <div class="ch-left"><span class="ch-icon">🧊</span><span class="ch-title">3D Container Loading View</span></div>
+            <div class="viz-btns" style="position:static;display:flex;gap:6px">
+              <button class="vbtn active" id="vb-pack" onclick="setViz('pack')">Packed</button>
+              <button class="vbtn" id="vb-single" onclick="setViz('single')">Carton</button>
+              <button class="vbtn" id="vb-wire" onclick="setViz('wire')">Wireframe</button>
+            </div>
+          </div>
+          <div class="viz-wrap" id="canvas-wrap">
+            <canvas id="viz"></canvas>
+            <div class="viz-overlay">
+              <span class="vtag c" id="vtag1">—</span>
+              <span class="vtag g" id="vtag2">—</span>
+              <span class="vtag a" id="vtag3">—</span>
+            </div>
+            <span class="viz-hint">🖱 Drag to rotate · Scroll to zoom · Right-click reset</span>
+            <div class="viz-reset"><button class="vbtn" onclick="resetCam()">⌖ Reset View</button></div>
+          </div>
+        </div>
+
+        <!-- MULTI RESULT (if multi-carton) -->
+        <div class="card" id="multi-result-card" style="display:none">
+          <div class="card-head"><div class="ch-left"><span class="ch-icon">📋</span><span class="ch-title">Multi-Carton Analysis</span></div></div>
+          <div class="card-body" style="padding:0">
+            <table class="mres-table">
+              <thead>
+                <tr><th>#</th><th>Carton</th><th>Qty</th><th>CBM/unit</th><th>Total CBM</th><th>Fits in Con.</th><th>Wgt (kg)</th><th>Limit By</th></tr>
+              </thead>
+              <tbody id="mres-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- end result-area -->
+    </div>
+    <!-- ═══════════════ END RIGHT ═══════════════ -->
+
+  </div><!-- end .main-grid -->
+</div><!-- end .page-inner -->
+</div><!-- end .page -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   SMART CBM CALCULATOR — Complete Logic
+═══════════════════════════════════════════════════ */
+
+// ── Container Presets ─────────────────────────────
+const CONTAINERS = {
+  '20st': { name: "20' Standard",    l: 590,  w: 234, h: 239, payload: 21700, cbm: 33.2,  emoji: '🟦' },
+  '40st': { name: "40' Standard",    l: 1203, w: 234, h: 239, payload: 26680, cbm: 67.7,  emoji: '🟩' },
+  '40hc': { name: "40' High Cube",   l: 1203, w: 234, h: 269, payload: 26330, cbm: 76.3,  emoji: '🟪' },
+};
+
+// ── Unit Conversion ────────────────────────────────
+const TO_CM  = { cm: 1, mm: 0.1, m: 100 };
+const WGT_TO_KG = { kg: 1, lbs: 0.453592 };
+
+// ── State ──────────────────────────────────────────
+let dimUnit   = 'cm';
+let curCon    = '20st';
+let mcItems   = [];
+let lastResult = null;
+let vizMode   = 'pack';
+
+// 3D State
+let rotX = 20, rotY = -40, camZoom = 1;
+let dragging = false, lastMouse = { x:0, y:0 };
+
+/* ── Helpers ───────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const set = (id, v) => { const el=$(id); if(el) el.textContent = v; };
+const n = id => parseFloat($(id)?.value) || 0;
+const fmt = (v, d=3) => v.toFixed(d);
+
+/* ── Unit Controls ─────────────────────────────── */
+function setDimUnit(u) {
+  dimUnit = u;
+  document.querySelectorAll('.pill-btn[id^="du-"]').forEach(b => b.classList.remove('active'));
+  $('du-' + u).classList.add('active');
+  $('dim-unit-label').textContent = u;
+  liveUpdate();
+}
+
+/* ── Container Select ──────────────────────────── */
+function selectCon(key) {
+  curCon = key;
+  document.querySelectorAll('.con-option').forEach(el => el.classList.remove('active'));
+  $('co-' + key).classList.add('active');
+  resetConDims();
+  $('con-badge-selected').textContent = CONTAINERS[key].name;
+}
+
+function resetConDims() {
+  const c = CONTAINERS[curCon];
+  $('k-l').value = c.l;
+  $('k-w').value = c.w;
+  $('k-h').value = c.h;
+  $('k-payload').value = c.payload;
+  $('k-cbm-disp').value = c.cbm.toFixed(1);
+  liveUpdate();
+}
+
+function getConDims() {
+  const l = n('k-l') || CONTAINERS[curCon].l;
+  const w = n('k-w') || CONTAINERS[curCon].w;
+  const h = n('k-h') || CONTAINERS[curCon].h;
+  const payload = n('k-payload') || CONTAINERS[curCon].payload;
+  const cbm = (l * w * h) / 1e6;
+  $('k-cbm-disp').value = cbm.toFixed(2);
+  return { l, w, h, payload, cbm };
+}
+
+/* ── Live Preview ──────────────────────────────── */
+function liveUpdate() {
+  getConDims();
+  const l   = n('c-l'), w = n('c-w'), h = n('c-h');
+  const qty = parseInt($('c-qty').value) || 1;
+  const f   = TO_CM[dimUnit] / 100;
+  if (l && w && h) {
+    const unitCBM = l * f * w * f * h * f;
+    const totCBM  = unitCBM * qty;
+    $('prev-cbm').textContent       = unitCBM.toFixed(5) + ' m³';
+    $('prev-total-cbm').textContent = totCBM.toFixed(4) + ' m³';
+  } else {
+    $('prev-cbm').textContent = '—';
+    $('prev-total-cbm').textContent = '—';
+  }
+}
+
+/* ── Core Fitting Algorithm ────────────────────── */
+function bestFit(cL, cW, cH, conL, conW, conH) {
+  // Try all 6 orientations of the carton
+  const orients = [
+    [cL,cW,cH],[cL,cH,cW],
+    [cW,cL,cH],[cW,cH,cL],
+    [cH,cL,cW],[cH,cW,cL],
+  ];
+  const orientNames = ['L·W·H','L·H·W','W·L·H','W·H·L','H·L·W','H·W·L'];
+  let best = { total:0, aL:0, aW:0, aH:0, dims:[cL,cW,cH], name:'L·W·H' };
+  orients.forEach((o, i) => {
+    const [ol, ow, oh] = o;
+    if (ol > conL || ow > conW || oh > conH) return;
+    const aL = Math.floor(conL / ol);
+    const aW = Math.floor(conW / ow);
+    const aH = Math.floor(conH / oh);
+    const total = aL * aW * aH;
+    if (total > best.total) best = { total, aL, aW, aH, dims: o, name: orientNames[i] };
+  });
+  return best;
+}
+
+/* ── Add to Multi-Carton ───────────────────────── */
+function addCartonToList() {
+  const l   = n('c-l'), w = n('c-w'), h = n('c-h');
+  const qty = parseInt($('c-qty').value) || 1;
+  const wgt = n('c-wgt');
+  const wgtUnit = $('wgt-unit').value;
+  const name    = $('c-name').value.trim() || `Carton ${mcItems.length + 1}`;
+
+  if (!l || !w || !h) { showToast('Enter dimensions first', 'w'); return; }
+
+  const f = TO_CM[dimUnit] / 100;
+  const lCm = l * f * 100, wCm = w * f * 100, hCm = h * f * 100;
+  const unitCBM = (lCm * wCm * hCm) / 1e6;
+  const wgtKg   = wgt * WGT_TO_KG[wgtUnit];
+
+  mcItems.push({ id: Date.now(), name, lCm, wCm, hCm, qty, wgt, wgtKg, wgtUnit, unitCBM, totalCBM: unitCBM * qty });
+  renderMCTable();
+  showToast(`✓ Added "${name}" to shipment list`);
+}
+
+function deleteMC(id) {
+  mcItems = mcItems.filter(i => i.id !== id);
+  renderMCTable();
+}
+
+function clearMC() {
+  if (!mcItems.length) return;
+  mcItems = [];
+  renderMCTable();
+}
+
+function renderMCTable() {
+  const badge = $('mc-count-badge');
+  const empty = $('mc-empty');
+  const wrap  = $('mc-table-wrap');
+  badge.textContent = mcItems.length + (mcItems.length === 1 ? ' item' : ' items');
+  if (!mcItems.length) { empty.style.display='block'; wrap.style.display='none'; return; }
+  empty.style.display='none'; wrap.style.display='block';
+  const tbody = $('mc-tbody');
+  tbody.innerHTML = '';
+  mcItems.forEach((item, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td class="td-name">${esc(item.name)}</td>
+      <td>${item.lCm.toFixed(1)}×${item.wCm.toFixed(1)}×${item.hCm.toFixed(1)}</td>
+      <td>${item.qty}</td>
+      <td class="td-cbm">${item.unitCBM.toFixed(4)}</td>
+      <td class="td-cbm">${item.totalCBM.toFixed(4)}</td>
+      <td>${(item.wgtKg * item.qty).toFixed(2)}</td>
+      <td><button class="del-btn" onclick="deleteMC(${item.id})">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ══ MAIN CALCULATION ════════════════════════════ */
+function calculate() {
+  const l   = n('c-l'), w = n('c-w'), h = n('c-h');
+  const qty = parseInt($('c-qty').value) || 1;
+  const wgt = n('c-wgt');
+  const wgtUnit = $('wgt-unit').value;
+
+  if (!l || !w || !h || l <= 0 || w <= 0 || h <= 0) {
+    showToast('Enter valid carton dimensions', 'e'); return;
+  }
+  if (!wgt || wgt <= 0) {
+    showToast('Enter carton weight for payload analysis', 'w');
+  }
+
+  const f   = TO_CM[dimUnit] / 100;          // cm factor → m  (so /100 again)
+  const fCm = TO_CM[dimUnit];                 // cm factor
+  const cL  = l * fCm, cW = w * fCm, cH = h * fCm;  // in cm
+  const wgtKg = wgt * WGT_TO_KG[wgtUnit];
+
+  const con  = getConDims();
+  const fit  = bestFit(cL, cW, cH, con.l, con.w, con.h);
+
+  const unitCBM  = (cL * cW * cH) / 1e6;
+  const totalCBM = unitCBM * qty;
+  const totalWgt = wgtKg * qty;
+
+  // ── STEP 3 & 4: payload limit ──────────────────
+  const bySpace  = fit.total;
+  const byWeight = wgtKg > 0 ? Math.floor(con.payload / wgtKg) : Infinity;
+  const actual   = Math.min(bySpace, byWeight);  // ← THE CORE LOGIC
+
+  // Utilization
+  const spacePct  = bySpace  > 0 ? Math.min((actual * unitCBM) / con.cbm * 100, 100) : 0;
+  const weightPct = byWeight !== Infinity ? Math.min((actual * wgtKg) / con.payload * 100, 100) : 0;
+
+  const limitBy = (byWeight === Infinity)
+    ? 'space'
+    : (bySpace <= byWeight ? 'space' : 'weight');
+
+  const consNeeded = actual > 0 ? Math.ceil(qty / actual) : (qty > 0 ? '∞' : 0);
+  const overflow   = actual > 0 ? Math.max(0, qty - actual) : qty;
+  const remCBM     = Math.max(0, con.cbm - actual * unitCBM);
+  const remWgt     = wgtKg > 0 ? Math.max(0, con.payload - actual * wgtKg) : con.payload;
+
+  // Smart recommendation
+  const rec = smartRecommend(unitCBM * actual, actual * wgtKg);
+
+  // Save
+  lastResult = { actual, bySpace, byWeight, fit, cL, cW, cH, unitCBM, totalCBM,
+    wgtKg, totalWgt, qty, con, spacePct, weightPct, limitBy, consNeeded, overflow, remCBM, remWgt, rec };
+
+  // ── RENDER RESULTS ─────────────────────────────
+  $('empty-state').style.display = 'none';
+  $('result-area').style.display = 'flex';
+
+  // Recommendation
+  $('rec-title').textContent = rec.title;
+  $('rec-text').textContent  = rec.text;
+
+  // Big answer
+  $('ans-num').textContent = actual.toLocaleString();
+  $('ans-sub').innerHTML   = wgt > 0
+    ? `actual loadable per container · you need <strong>${consNeeded}</strong> container${consNeeded > 1 ? 's' : ''}`
+    : `cartons fit by space (add weight for payload check)`;
+
+  const limitEl = $('ans-limit');
+  if (limitBy === 'space') {
+    limitEl.className = 'ah-limit by-space';
+    limitEl.textContent = `✓ Limited by SPACE — ${bySpace} fit · ${byWeight === Infinity ? 'No weight data' : byWeight + ' by weight'}`;
+  } else {
+    limitEl.className = 'ah-limit by-weight';
+    limitEl.textContent = `⚠ Limited by PAYLOAD — ${byWeight} by weight · ${bySpace} by space`;
+  }
+
+  // Meters
+  $('mpct-space').textContent  = spacePct.toFixed(1) + '%';
+  $('mpct-weight').textContent = weightPct.toFixed(1) + '%';
+  $('mfill-space').style.width  = spacePct + '%';
+  $('mfill-weight').style.width = weightPct + '%';
+  $('mfill-weight').className   = 'meter-fill weight' + (weightPct >= 95 ? ' over' : '');
+  $('mdet-space').innerHTML  = `Used: ${(actual * unitCBM).toFixed(3)} / ${con.cbm.toFixed(1)} m³ &nbsp;|&nbsp; Remaining: ${remCBM.toFixed(3)} m³`;
+  $('mdet-weight').innerHTML = wgtKg > 0
+    ? `Used: ${(actual * wgtKg).toFixed(0)} / ${con.payload.toLocaleString()} kg &nbsp;|&nbsp; Remaining: ${remWgt.toFixed(0)} kg`
+    : 'No weight entered — payload not checked';
+
+  // Meter card highlight
+  $('meter-weight').className = 'meter-card' + (limitBy === 'weight' ? ' active-limit' : '');
+
+  // Arrangement
+  $('ar-l').textContent     = fit.aL;
+  $('ar-w').textContent     = fit.aW;
+  $('ar-h').textContent     = fit.aH;
+  $('ar-total').textContent = bySpace;
+  $('ar-caption').innerHTML = `Best orientation: <strong>${fit.name}</strong> · Carton ${cL.toFixed(0)}×${cW.toFixed(0)}×${cH.toFixed(0)} cm · `
+    + (actual < bySpace ? `<span style="color:var(--amber)">⚠ Payload reduces loadable to ${actual}</span>` : `<span style="color:var(--green2)">✓ No payload reduction</span>`);
+
+  // Stats
+  set('s-cons',   consNeeded);
+  set('s-cons-sub', `for ${qty} cartons`);
+  set('s-cbm',    totalCBM.toFixed(3));
+  set('s-wgt',    wgtKg > 0 ? totalWgt.toFixed(2) : '—');
+  set('s-wgt-unit', wgtUnit);
+  set('s-rem-cbm', remCBM.toFixed(3));
+  set('s-rem-wgt', wgtKg > 0 ? remWgt.toFixed(0) : '—');
+  set('s-overflow', overflow);
+
+  // Dash
+  set('d-cartons', qty.toLocaleString());
+  $('d-cartons-sub').textContent = mcItems.length > 0 ? `${mcItems.length} types` : 'total ordered';
+  set('d-cbm',  totalCBM.toFixed(3) + ' m³');
+  set('d-wgt',  wgtKg > 0 ? totalWgt.toFixed(1) + ' kg' : '—');
+  set('d-rec',  rec.conName);
+
+  // 3D tags
+  $('vtag1').textContent = `${CONTAINERS[curCon].name} — ${con.l}×${con.w}×${con.h} cm`;
+  $('vtag2').textContent = `${actual} cartons loadable`;
+  $('vtag3').textContent = wgtKg > 0 ? `Payload: ${weightPct.toFixed(0)}% used` : 'No weight entered';
+
+  // Specs table
+  renderSpecsTable(unitCBM, wgtKg);
+
+  // Multi-carton results
+  renderMultiResults(con);
+
+  // Render 3D
+  renderCanvas();
+  showToast(`✓ ${actual} cartons fit · Limited by ${limitBy}`);
+}
+
+/* ── Smart Recommendation ──────────────────────── */
+function smartRecommend(usedCBM, usedWgt) {
+  let best = null, bestScore = -Infinity;
+  Object.entries(CONTAINERS).forEach(([key, con]) => {
+    if (usedCBM <= con.cbm && usedWgt <= con.payload) {
+      const spaceUtil  = usedCBM / con.cbm;
+      const weightUtil = usedWgt > 0 ? usedWgt / con.payload : 0;
+      const score = (spaceUtil + weightUtil) / 2;
+      if (score > bestScore) { bestScore = score; best = { key, con, score }; }
+    }
+  });
+  if (!best) {
+    const totalVol = usedCBM;
+    const big = Object.entries(CONTAINERS).reduce((b, [k,c]) => c.cbm > (b?.[1]?.cbm||0) ? [k,c] : b, null);
+    return { title: '🔁 Multiple Containers Needed', text: `Your cargo needs more than one container. Consider ${big[1].name} for maximum volume per trip.`, conName: big[1].name, key: big[0] };
+  }
+  const pct = (best.score * 100).toFixed(0);
+  return {
+    title: `✅ ${best.con.name} Recommended`,
+    text: `Best fit for your cargo. ${pct}% average utilization of space and payload. Efficient and cost-effective.`,
+    conName: best.con.name, key: best.key,
+  };
+}
+
+/* ── Specs Table ───────────────────────────────── */
+function renderSpecsTable(unitCBM, wgtKg) {
+  const tbody = $('specs-tbody');
+  tbody.innerHTML = '';
+  Object.entries(CONTAINERS).forEach(([key, con]) => {
+    const fit     = bestFit(lastResult.cL, lastResult.cW, lastResult.cH, con.l, con.w, con.h);
+    const byWgt   = wgtKg > 0 ? Math.floor(con.payload / wgtKg) : '—';
+    const actual  = wgtKg > 0 ? Math.min(fit.total, byWgt) : fit.total;
+    const isSelected = key === curCon;
+    const isRec      = key === lastResult.rec.key;
+    const tr = document.createElement('tr');
+    if (isSelected) tr.className = 'active-row';
+    tr.innerHTML = `
+      <td><strong>${con.emoji} ${con.name}</strong>
+        ${isSelected ? '<span class="spec-badge selected">Selected</span>' : ''}
+        ${isRec ? '<span class="spec-badge rec">Best Fit</span>' : ''}
+      </td>
+      <td style="font-size:11px">${con.l}×${con.w}×${con.h}</td>
+      <td>${con.payload.toLocaleString()} kg</td>
+      <td>${con.cbm} m³</td>
+      <td style="color:var(--cyan)">${fit.total}</td>
+      <td style="color:var(--amber)">${byWgt}</td>
+      <td style="color:var(--green2);font-weight:700">${actual}</td>
+      <td style="font-size:11px;color:var(--t3)">${fit.total > 0 ? fit.name : 'Too large'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ── Multi Carton Results ──────────────────────── */
+function renderMultiResults(con) {
+  if (!mcItems.length) { $('multi-result-card').style.display='none'; return; }
+  $('multi-result-card').style.display='block';
+  const tbody = $('mres-tbody');
+  tbody.innerHTML = '';
+  mcItems.forEach((item, i) => {
+    const fit    = bestFit(item.lCm, item.wCm, item.hCm, con.l, con.w, con.h);
+    const byWgt  = item.wgtKg > 0 ? Math.floor(con.payload / item.wgtKg) : Infinity;
+    const actual = Math.min(fit.total, byWgt);
+    const limitBy = (byWgt === Infinity) ? 'Space only' : (fit.total <= byWgt ? '✓ Space' : '⚠ Payload');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td style="color:var(--t1);font-weight:600">${esc(item.name)}</td>
+      <td>${item.qty}</td>
+      <td style="color:var(--cyan)">${item.unitCBM.toFixed(4)}</td>
+      <td style="color:var(--cyan)">${item.totalCBM.toFixed(4)}</td>
+      <td style="color:var(--green2);font-weight:700">${actual}</td>
+      <td>${(item.wgtKg * item.qty).toFixed(2)}</td>
+      <td style="color:${limitBy.includes('Payload') ? 'var(--amber)' : 'var(--green2)'}">${limitBy}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ── Export ────────────────────────────────────── */
+function exportResults() {
+  if (!lastResult) { showToast('Calculate first', 'w'); return; }
+  const r = lastResult;
+  const rows = [
+    ['Smart CBM Container Loading Report'],
+    ['Generated', new Date().toLocaleString()],
+    [],
+    ['CARTON DETAILS'],
+    ['Dimensions (cm)', `${r.cL.toFixed(1)} × ${r.cW.toFixed(1)} × ${r.cH.toFixed(1)}`],
+    ['Volume / Carton', `${r.unitCBM.toFixed(5)} m³`],
+    ['Weight / Carton', `${r.wgtKg.toFixed(3)} kg`],
+    ['Quantity', r.qty],
+    ['Total CBM', `${r.totalCBM.toFixed(4)} m³`],
+    ['Total Weight', `${r.totalWgt.toFixed(2)} kg`],
+    [],
+    ['CONTAINER'],
+    ['Type', CONTAINERS[curCon].name],
+    ['Internal (cm)', `${r.con.l} × ${r.con.w} × ${r.con.h}`],
+    ['Max Payload', `${r.con.payload.toLocaleString()} kg`],
+    ['Gross CBM', `${r.con.cbm} m³`],
+    [],
+    ['RESULTS'],
+    ['Cartons by Space', r.bySpace],
+    ['Cartons by Payload', r.byWeight === Infinity ? 'N/A' : r.byWeight],
+    ['ACTUAL LOADABLE (MIN)', r.actual],
+    ['Limited By', r.limitBy.toUpperCase()],
+    ['Space Utilization', `${r.spacePct.toFixed(1)}%`],
+    ['Payload Utilization', `${r.weightPct.toFixed(1)}%`],
+    ['Remaining CBM', `${r.remCBM.toFixed(3)} m³`],
+    ['Remaining Payload', `${r.remWgt.toFixed(0)} kg`],
+    ['Containers Needed', r.consNeeded],
+    ['Overflow Cartons', r.overflow],
+    ['Best Orientation', r.fit.name],
+    ['Arrangement', `${r.fit.aL} × ${r.fit.aW} × ${r.fit.aH}`],
+    ['Recommended Container', r.rec.conName],
+  ];
+  const csv = rows.map(r => Array.isArray(r) ? r.map(v=>`"${v}"`).join(',') : `"${r}"`).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `Container_Loading_Report_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('✓ Report exported as CSV');
+}
+
+/* ── Toast ─────────────────────────────────────── */
+let toastT;
+function showToast(msg, type='s') {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ═══════════════════════════════════════════════════
+   3D CANVAS ENGINE
+═══════════════════════════════════════════════════ */
+const canvas = $('viz');
+const ctx    = canvas.getContext('2d');
+
+canvas.addEventListener('mousedown', e => { dragging=true; lastMouse={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mouseup',   ()=> dragging=false );
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastMouse.x) * 0.42;
+  rotX += (e.clientY - lastMouse.y) * 0.26;
+  rotX  = Math.max(-78, Math.min(78, rotX));
+  lastMouse = { x:e.clientX, y:e.clientY };
+  renderCanvas();
+});
+canvas.addEventListener('touchstart', e => { dragging=true; lastMouse={x:e.touches[0].clientX,y:e.touches[0].clientY}; }, {passive:true});
+canvas.addEventListener('touchend', () => dragging=false);
+canvas.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  rotY += (e.touches[0].clientX - lastMouse.x) * 0.42;
+  rotX += (e.touches[0].clientY - lastMouse.y) * 0.26;
+  rotX = Math.max(-78, Math.min(78, rotX));
+  lastMouse = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+  renderCanvas();
+}, {passive:true});
+canvas.addEventListener('wheel', e => { e.preventDefault(); camZoom -= e.deltaY*0.001; camZoom=Math.max(.25,Math.min(3.5,camZoom)); renderCanvas(); }, {passive:false});
+canvas.addEventListener('contextmenu', e => { e.preventDefault(); resetCam(); });
+
+function resetCam() { rotX=20; rotY=-40; camZoom=1; renderCanvas(); }
+
+function setViz(m) {
+  vizMode = m;
+  document.querySelectorAll('.vbtn[id^="vb-"]').forEach(b => b.classList.remove('active'));
+  $('vb-' + m).classList.add('active');
+  renderCanvas();
+}
+
+function resizeCanvas() {
+  const wrap = $('canvas-wrap');
+  if (!wrap) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = wrap.clientWidth  * dpr;
+  canvas.height = wrap.clientHeight * dpr;
+  canvas.style.width  = wrap.clientWidth  + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+  ctx.scale(dpr, dpr);
+  renderCanvas();
+}
+window.addEventListener('resize', resizeCanvas);
+setTimeout(resizeCanvas, 100);
+
+function project(x, y, z, cx, cy, s) {
+  const rX=rotX*Math.PI/180, rY=rotY*Math.PI/180;
+  const x1 = x*Math.cos(rY) - z*Math.sin(rY);
+  const z1 = x*Math.sin(rY) + z*Math.cos(rY);
+  const y2 = y*Math.cos(rX) - z1*Math.sin(rX);
+  const z2 = y*Math.sin(rX) + z1*Math.cos(rX);
+  return { x: cx + x1*s, y: cy + y2*s, z: z2 };
+}
+
+function hexA(hex, a) {
+  if (!hex||hex.length<7) return `rgba(34,211,238,${a})`;
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// Face light multipliers [back, front, left, right, bottom, top]
+const FACE_LM = [0.40, 0.96, 0.55, 0.70, 0.48, 0.85];
+
+function drawBox3D(cx, cy, s, l, w, h, color, bright, wire=false, ox=0, oy=0, oz=0) {
+  const hw=l/2, hd=w/2, hh=h/2;
+  const V = [
+    [ox-hw,oy-hh,oz-hd],[ox+hw,oy-hh,oz-hd],[ox+hw,oy+hh,oz-hd],[ox-hw,oy+hh,oz-hd],
+    [ox-hw,oy-hh,oz+hd],[ox+hw,oy-hh,oz+hd],[ox+hw,oy+hh,oz+hd],[ox-hw,oy+hh,oz+hd],
+  ];
+  const FACES = [[0,1,2,3],[4,5,6,7],[0,4,7,3],[1,5,6,2],[3,2,6,7],[0,1,5,4]];
+  const p = V.map(([x,y,z])=>project(x,y,z,cx,cy,s));
+  const sorted = FACES.map((f,i)=>({f,i,z:f.reduce((s,vi)=>s+p[vi].z,0)/4})).sort((a,b)=>a.z-b.z);
+  sorted.forEach(({f,i}) => {
+    const pts = f.map(vi=>p[vi]);
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    pts.slice(1).forEach(pt=>ctx.lineTo(pt.x,pt.y));
+    ctx.closePath();
+    if (wire) {
+      ctx.fillStyle = hexA(color, 0.05);
+      ctx.fill();
+      ctx.strokeStyle = hexA(color, bright ? 0.65 : 0.28);
+      ctx.lineWidth = bright ? 1.4 : 0.7;
+    } else {
+      ctx.fillStyle = hexA(color, FACE_LM[i] * (bright ? 1 : 0.56));
+      ctx.fill();
+      ctx.strokeStyle = bright ? hexA(color,0.65) : 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = bright ? 1.2 : 0.3;
+    }
+    ctx.stroke();
+  });
+}
+
+function drawContainerShell(cx, cy, s, l, w, h, opacity=0.25) {
+  const hw=l/2, hd=w/2, hh=h/2;
+  const V = [
+    [-hw,-hh,-hd],[hw,-hh,-hd],[hw,hh,-hd],[-hw,hh,-hd],
+    [-hw,-hh,hd],[hw,-hh,hd],[hw,hh,hd],[-hw,hh,hd],
+  ];
+  const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  const p = V.map(([x,y,z])=>project(x,y,z,cx,cy,s));
+
+  // Floor + walls subtle fill
+  [[0,1,5,4],[0,1,2,3],[0,4,7,3],[1,5,6,2]].forEach(vi=>{
+    const pts=vi.map(i=>p[i]);
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    pts.slice(1).forEach(pt=>ctx.lineTo(pt.x,pt.y));
+    ctx.closePath();
+    ctx.fillStyle='rgba(34,211,238,0.03)'; ctx.fill();
+  });
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(34,211,238,${opacity * 0.8})`;
+  ctx.lineWidth = 1.2; ctx.setLineDash([5,6]);
+  edges.forEach(([a,b])=>{
+    ctx.beginPath(); ctx.moveTo(p[a].x,p[a].y); ctx.lineTo(p[b].x,p[b].y); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  ctx.strokeStyle = `rgba(34,211,238,${opacity * 1.8})`;
+  ctx.lineWidth = 1.5;
+  [[4,5],[5,6],[6,7],[7,4]].forEach(([a,b])=>{
+    ctx.beginPath(); ctx.moveTo(p[a].x,p[a].y); ctx.lineTo(p[b].x,p[b].y); ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawGrid(cx, cy, sz) {
+  const steps=10, step=sz/steps;
+  ctx.save(); ctx.strokeStyle='rgba(55,75,110,0.12)'; ctx.lineWidth=0.7;
+  for(let i=-steps;i<=steps;i++){
+    const a=project(-sz,0,i*step,cx,cy+sz*.32,1), b=project(sz,0,i*step,cx,cy+sz*.32,1);
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    const c=project(i*step,0,-sz,cx,cy+sz*.32,1), d=project(i*step,0,sz,cx,cy+sz*.32,1);
+    ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(d.x,d.y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+const BOX_COLORS = ['#22d3ee','#34d399','#8b5cf6','#f59e0b','#10b981','#3b82f6','#ec4899','#f97316'];
+
+function renderCanvas() {
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.width/dpr, H=canvas.height/dpr;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawGrid(W/2, H/2, Math.min(W,H)*0.48);
+
+  if (!lastResult) {
+    ctx.textAlign='center'; ctx.font='13px Inter,sans-serif';
+    ctx.fillStyle='rgba(74,96,128,0.5)';
+    ctx.fillText('3D container view appears after calculation', W/2, H/2);
+    return;
+  }
+
+  const { actual, bySpace, fit, cL, cW, cH, con } = lastResult;
+  const maxD = Math.max(con.l, con.w, con.h);
+  const s    = (Math.min(W,H) * 0.25 * camZoom) / maxD;
+  const cx=W/2, cy=H/2;
+  const wire = (vizMode === 'wire');
+
+  if (vizMode === 'single') {
+    const maxC = Math.max(cL,cW,cH);
+    const sc = (Math.min(W,H) * 0.3 * camZoom) / maxC;
+    drawBox3D(cx, cy, sc, cL, cW, cH, '#22d3ee', true, false);
+    // Dim labels
+    const hw=cL/2,hd=cW/2,hh=cH/2;
+    [
+      [project(-hw,hh,hd,cx,cy,sc), project(hw,hh,hd,cx,cy,sc), `L: ${cL.toFixed(0)} cm`],
+      [project(hw,hh,hd,cx,cy,sc),  project(hw,-hh,hd,cx,cy,sc),`H: ${cH.toFixed(0)} cm`],
+      [project(hw,hh,-hd,cx,cy,sc), project(hw,hh,hd,cx,cy,sc), `W: ${cW.toFixed(0)} cm`],
+    ].forEach(([p1,p2,txt])=>{
+      const len=Math.hypot(p2.x-p1.x,p2.y-p1.y); if(len<20) return;
+      ctx.save();
+      ctx.translate((p1.x+p2.x)/2,(p1.y+p2.y)/2);
+      ctx.rotate(Math.atan2(p2.y-p1.y,p2.x-p1.x));
+      ctx.font='10px Inter,sans-serif'; ctx.fillStyle='rgba(144,163,194,.75)';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(txt,0,-10); ctx.restore();
+      ctx.save(); ctx.strokeStyle='rgba(144,163,194,.2)'; ctx.lineWidth=0.8;
+      ctx.setLineDash([3,4]); ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+      ctx.restore();
+    });
+    return;
+  }
+
+  // Packed / wireframe view
+  drawContainerShell(cx, cy, s, con.l, con.w, con.h, wire ? 0.45 : 0.28);
+
+  if (bySpace === 0) {
+    ctx.textAlign='center'; ctx.font='13px Inter,sans-serif';
+    ctx.fillStyle='rgba(248,113,113,0.7)';
+    ctx.fillText('Carton is too large for this container', cx, cy); return;
+  }
+
+  const [bL,bW,bH] = fit.dims;
+  const hw_c=con.l/2, hd_c=con.w/2, hh_c=con.h/2;
+  const maxDraw = Math.min(actual, 240);
+  let drawn = 0;
+
+  // Color: by space = cyan/green/purple layers; payload-limited = amber on overflow
+  outer:
+  for (let iz=0; iz<fit.aH; iz++){
+    for (let iy=0; iy<fit.aW; iy++){
+      for (let ix=0; ix<fit.aL; ix++){
+        if (drawn >= maxDraw) break outer;
+        const ox = -hw_c + bL/2 + ix*bL;
+        const oz = -hd_c + bW/2 + iy*bW;
+        const oy = -hh_c + bH/2 + iz*bH;
+        const color = BOX_COLORS[(ix+iy+iz)%3];
+        drawBox3D(cx, cy, s, bL, bW, bH, color, false, wire, ox, oy, oz);
+        drawn++;
+      }
+    }
+  }
+
+  // If payload limited, show "blocked" zone in red overlay
+  if (actual < bySpace && actual < maxDraw) {
+    // just redraw the container outline prominently
+  }
+
+  // Redraw container on top
+  drawContainerShell(cx, cy, s, con.l, con.w, con.h, wire ? 0.5 : 0.35);
+
+  // Container label
+  ctx.save();
+  ctx.font = 'bold 11px Inter,sans-serif'; ctx.fillStyle='rgba(34,211,238,.55)'; ctx.textAlign='center';
+  const top = project(0, -hh_c-18, 0, cx, cy, s);
+  ctx.fillText(CONTAINERS[curCon].name, top.x, top.y);
+  ctx.restore();
+}
+
+/* ── Init ─────────────────────────────────────── */
+selectCon('20st');
+liveUpdate();
+</script>
+</body>
+</html>

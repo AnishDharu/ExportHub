@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart CBM & Container Loading Calculator — ExportHub</title>
-  <meta name="description" content="Professional container loading calculator for freight forwarders and exporters. CBM, payload, 3D visualization, multi-carton mode.">
+  <meta name="description" content="Professional container loading calculator for freight forwarders and exporters. CBM, payload, 3D visualization, multi-carton mode, reefer containers, PDF & CSV export.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -36,6 +36,7 @@
       --grad:     linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
       --grad2:    linear-gradient(135deg, #10b981 0%, #22d3ee 100%);
       --grad3:    linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+      --teal:     #14b8a6;
       --r:        12px;
       --r2:       8px;
       --tr:       0.2s ease;
@@ -143,15 +144,16 @@
     .badge-amber { color: var(--amber);  border-color: rgba(245,158,11,.3);  background: rgba(245,158,11,.08);  }
     .badge-red   { color: var(--red2);   border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.08); }
     .badge-purple{ color: var(--purple2);border-color: rgba(167,139,250,.3); background: rgba(167,139,250,.08); }
+    .badge-teal  { color: var(--teal);   border-color: rgba(20,184,166,.3);  background: rgba(20,184,166,.08);  }
     .card-body { padding: 18px; }
 
     /* ─── UNIT TOGGLE ─── */
-    .pill-row { display: flex; gap: 3px; background: rgba(0,0,0,.35); border-radius: var(--r2); padding: 3px; }
+    .pill-row { display: flex; gap: 3px; background: rgba(0,0,0,.35); border-radius: var(--r2); padding: 3px; flex-wrap: wrap; }
     .pill-btn {
-      flex: 1; padding: 7px 6px; border: none; cursor: pointer;
+      flex: 1; padding: 7px 5px; border: none; cursor: pointer;
       border-radius: 6px; font-family: 'Inter', sans-serif;
-      font-size: 12px; font-weight: 600; color: var(--t3);
-      background: transparent; transition: var(--tr);
+      font-size: 11px; font-weight: 600; color: var(--t3);
+      background: transparent; transition: var(--tr); white-space: nowrap;
     }
     .pill-btn.active { background: rgba(34,211,238,.14); color: var(--cyan); }
     .pill-btn:hover:not(.active) { color: var(--t2); }
@@ -194,9 +196,9 @@
     .divider { height: 1px; background: var(--border); margin: 16px 0; }
 
     /* ─── CONTAINER TYPE CARDS ─── */
-    .con-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .con-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
     .con-option {
-      padding: 12px 8px; border-radius: 10px; cursor: pointer;
+      padding: 11px 6px; border-radius: 10px; cursor: pointer;
       border: 1px solid var(--border);
       background: rgba(0,0,0,.25);
       text-align: center; transition: var(--tr);
@@ -208,9 +210,9 @@
       background: rgba(34,211,238,.07);
       box-shadow: 0 0 0 1px rgba(34,211,238,.12);
     }
-    .con-option .co-emoji { font-size: 20px; display: block; margin-bottom: 5px; }
-    .con-option .co-name  { font-size: 12px; font-weight: 700; display: block; }
-    .con-option .co-cbm   { font-size: 10px; color: var(--t3); display: block; margin-top: 2px; }
+    .con-option .co-emoji { font-size: 18px; display: block; margin-bottom: 4px; }
+    .con-option .co-name  { font-size: 11px; font-weight: 700; display: block; }
+    .con-option .co-cbm   { font-size: 9px; color: var(--t3); display: block; margin-top: 2px; }
     .con-option.active .co-name { color: var(--cyan); }
     .con-option.active .co-cbm  { color: rgba(34,211,238,.6); }
     .con-rec-badge {
@@ -219,6 +221,45 @@
       background: var(--green); color: #070b14;
       padding: 2px 5px; border-radius: 4px; letter-spacing: .5px;
     }
+
+    /* ─── CUSTOM CONTAINER MODAL ─── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(7,11,20,.85); backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .25s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; width: 420px; max-width: 96vw;
+      transform: translateY(20px); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 24px 60px rgba(0,0,0,.7);
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+    /* ─── VOLUME CONVERSIONS ─── */
+    .conv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    @media (max-width: 900px) { .conv-grid { grid-template-columns: 1fr 1fr; } }
+    .conv-card {
+      background: rgba(0,0,0,.3); border: 1px solid var(--border);
+      border-radius: 9px; padding: 12px 14px;
+    }
+    .conv-card .cc-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--t3); margin-bottom: 5px; }
+    .conv-card .cc-val { font-size: 16px; font-weight: 800; }
+    .conv-card .cc-unit { font-size: 10px; color: var(--t3); margin-top: 2px; }
+
+    /* ─── VOLUMETRIC WEIGHT ─── */
+    .volewgt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .volewgt-card {
+      background: rgba(0,0,0,.3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px; text-align: center;
+    }
+    .volewgt-card .vw-mode { font-size: 11px; font-weight: 700; color: var(--t3); margin-bottom: 4px; }
+    .volewgt-card .vw-val  { font-size: 22px; font-weight: 800; }
+    .volewgt-card .vw-note { font-size: 10px; color: var(--t3); margin-top: 4px; }
 
     /* ─── MULTI-CARTON TABLE ─── */
     .mc-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
@@ -261,12 +302,20 @@
       border: 1px solid; cursor: pointer; font-family: 'Inter', sans-serif;
       transition: var(--tr); display: inline-flex; align-items: center; gap: 5px;
     }
-    .btn-add { color: var(--green2); border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.08); }
+    .btn-add    { color: var(--green2); border-color: rgba(52,211,153,.35);  background: rgba(52,211,153,.08); }
     .btn-add:hover { background: rgba(52,211,153,.16); }
-    .btn-clear { color: var(--red2); border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.06); }
+    .btn-clear  { color: var(--red2);   border-color: rgba(248,113,113,.3);  background: rgba(248,113,113,.06); }
     .btn-clear:hover { background: rgba(248,113,113,.12); }
-    .btn-export { color: var(--blue2); border-color: rgba(96,165,250,.35); background: rgba(96,165,250,.08); }
+    .btn-export { color: var(--blue2);  border-color: rgba(96,165,250,.35);  background: rgba(96,165,250,.08); }
     .btn-export:hover { background: rgba(96,165,250,.16); }
+    .btn-pdf    { color: var(--purple2);border-color: rgba(167,139,250,.35); background: rgba(167,139,250,.08); }
+    .btn-pdf:hover { background: rgba(167,139,250,.16); }
+    .btn-custom { color: var(--teal);   border-color: rgba(20,184,166,.35);  background: rgba(20,184,166,.08); }
+    .btn-custom:hover { background: rgba(20,184,166,.16); }
+    .btn-ghost  { color: var(--t3); border-color: var(--border); background: transparent; }
+    .btn-ghost:hover { color: var(--t1); border-color: rgba(55,75,110,.7); }
+    .btn-primary{ color: #070b14; border-color: var(--cyan); background: var(--cyan); font-weight: 800; }
+    .btn-primary:hover { box-shadow: 0 4px 16px rgba(34,211,238,.3); }
 
     /* ─── RIGHT COLUMN ─── */
     .right-col { display: flex; flex-direction: column; gap: 18px; }
@@ -332,6 +381,15 @@
 
     /* ─── STATS GRID ─── */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+    /* ─── REC BULLETS ─── */
+    .rec-bullets { list-style: none; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .rec-bullets li { font-size: 12px; color: var(--t2); line-height: 1.6; }
+    .rec-bullets li::before { content: '→  '; color: var(--cyan); font-weight: 700; }
+    .rec-bullets li.warn::before { content: '⚠  '; color: var(--amber); }
+    .rec-bullets li.err::before  { content: '✕  '; color: var(--red2); }
+    .rec-bullets li.ok::before   { content: '✓  '; color: var(--green2); }
+    .rec-bullets li.tip::before  { content: '💡 '; }
     @media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
     .stat-card {
       background: var(--card);
@@ -365,9 +423,9 @@
       background: linear-gradient(135deg, rgba(16,185,129,.08), rgba(34,211,238,.06));
       border: 1px solid rgba(16,185,129,.25);
       border-radius: var(--r); padding: 16px 18px;
-      display: flex; align-items: center; gap: 14px;
+      display: flex; align-items: flex-start; gap: 14px;
     }
-    .rec-icon { font-size: 32px; flex-shrink: 0; }
+    .rec-icon { font-size: 32px; flex-shrink: 0; margin-top: 2px; }
     .rec-title { font-size: 13px; font-weight: 700; color: var(--green2); margin-bottom: 4px; }
     .rec-text { font-size: 12px; color: var(--t2); line-height: 1.6; }
 
@@ -376,11 +434,11 @@
     .specs-table th {
       text-align: left; padding: 8px 12px; color: var(--t3);
       font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border); white-space: nowrap;
     }
     .specs-table td {
       padding: 10px 12px; border-bottom: 1px solid rgba(55,75,110,.2);
-      color: var(--t2);
+      color: var(--t2); white-space: nowrap;
     }
     .specs-table tr.active-row td { background: rgba(34,211,238,.04); color: var(--t1); }
     .specs-table tr:last-child td { border-bottom: none; }
@@ -390,6 +448,26 @@
     }
     .spec-badge.selected { background: rgba(34,211,238,.15); color: var(--cyan); border: 1px solid rgba(34,211,238,.3); }
     .spec-badge.rec { background: rgba(16,185,129,.15); color: var(--green2); border: 1px solid rgba(16,185,129,.3); }
+
+    /* ─── DASH GRID 5-col ─── */
+    .dash-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    @media (max-width: 1000px) { .dash-grid { grid-template-columns: 1fr 1fr 1fr; } }
+    @media (max-width: 640px)  { .dash-grid { grid-template-columns: 1fr 1fr; } }
+
+    /* ─── PRINT ─── */
+    @media print {
+      body { background: #fff; color: #111; }
+      .topbar, .calc-btn, .viz-wrap, .btn-sm, .page-header > div:last-child, .modal-overlay { display: none !important; }
+      .page { padding-top: 0; }
+      .card, .stat-card, .dash-card { background: #f9fafb; border: 1px solid #e5e7eb; color: #111; }
+      .card-head { border-bottom: 1px solid #e5e7eb; }
+      .ch-title, .slabel, .sc-label, .dc-label, .cc-label, .ah-label { color: #555; }
+      .main-grid { grid-template-columns: 1fr; }
+      #empty-state { display: none !important; }
+      #result-area { display: flex !important; }
+      .answer-hero { border: 1px solid #ddd; grid-template-columns: 1fr 1fr; }
+      .ah-number { color: #0e7490; font-size: 48px; }
+    }
 
     /* ─── 3D VISUALIZER ─── */
     .viz-wrap {
@@ -422,8 +500,6 @@
     .vbtn.active { color: var(--cyan); border-color: var(--bhi); background: rgba(34,211,238,.1); }
 
     /* ─── FREIGHT PLANNER DASHBOARD ─── */
-    .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr 1fr; } }
     .dash-card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 10px; padding: 16px;
@@ -431,7 +507,7 @@
     }
     .dc-icon { font-size: 22px; margin-bottom: 8px; }
     .dc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--t3); margin-bottom: 4px; }
-    .dc-val { font-size: 22px; font-weight: 800; }
+    .dc-val { font-size: 20px; font-weight: 800; line-height: 1.2; }
     .dc-sub { font-size: 11px; color: var(--t3); margin-top: 3px; }
 
     /* ─── MULTI RESULT TABLE ─── */
@@ -439,7 +515,7 @@
     .mres-table th {
       text-align: left; padding: 9px 12px;
       font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
-      color: var(--t3); border-bottom: 1px solid var(--border); background: rgba(0,0,0,.15);
+      color: var(--t3); border-bottom: 1px solid var(--border); background: rgba(0,0,0,.15); white-space: nowrap;
     }
     .mres-table td {
       padding: 10px 12px; border-bottom: 1px solid rgba(55,75,110,.18);
@@ -516,16 +592,55 @@
   <a href="/" class="topbar-back">← Home</a>
 </div>
 
+<!-- ─── CUSTOM CONTAINER MODAL ─── -->
+<div class="modal-overlay" id="custom-modal" onclick="closeCustomModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-title">🏗 Create Custom Container</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="form-group">
+        <label>Container Name</label>
+        <input type="text" id="cm-name" placeholder="e.g. 45' Pallet Wide">
+      </div>
+      <div class="form-group">
+        <label>Emoji / Icon</label>
+        <select id="cm-emoji">
+          <option value="🔷">🔷 Diamond Blue</option>
+          <option value="🔶">🔶 Diamond Orange</option>
+          <option value="⬛">⬛ Black Square</option>
+          <option value="🟥">🟥 Red Square</option>
+          <option value="🟫">🟫 Brown Square</option>
+          <option value="⚙️">⚙️ Gear</option>
+          <option value="🏭">🏭 Factory</option>
+        </select>
+      </div>
+      <div class="input-row3">
+        <div class="form-group"><label>Length (cm)</label><input type="number" id="cm-l" placeholder="590" min="1"></div>
+        <div class="form-group"><label>Width (cm)</label><input type="number" id="cm-w" placeholder="234" min="1"></div>
+        <div class="form-group"><label>Height (cm)</label><input type="number" id="cm-h" placeholder="239" min="1"></div>
+      </div>
+      <div class="form-group">
+        <label>Max Payload (kg)</label>
+        <input type="number" id="cm-payload" placeholder="21700" min="1">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-ghost" onclick="closeCustomModal()">Cancel</button>
+      <button class="btn-sm btn-primary" onclick="addCustomContainer()">Add Container</button>
+    </div>
+  </div>
+</div>
+
 <div class="page">
 <div class="page-inner">
 
   <div class="page-header">
     <div>
       <h1>Smart CBM &amp; <span>Container Loading Calculator</span></h1>
-      <p>Professional logistics planning tool — space + payload analysis, 3D visualization, multi-carton mode</p>
+      <p>Professional logistics planning — space + payload analysis, 3D visualization, reefer containers, multi-carton mode</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-sm btn-export" onclick="exportResults()">⬇ Export PDF / CSV</button>
+      <button class="btn-sm btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn-sm btn-pdf"    onclick="exportPDF()">🖨 Print / PDF</button>
     </div>
   </div>
 
@@ -550,9 +665,12 @@
           <!-- Dimension unit -->
           <div class="slabel">Dimension Unit</div>
           <div class="pill-row" style="margin-bottom:14px">
-            <button class="pill-btn active" id="du-cm" onclick="setDimUnit('cm')">cm</button>
-            <button class="pill-btn" id="du-mm" onclick="setDimUnit('mm')">mm</button>
-            <button class="pill-btn" id="du-m"  onclick="setDimUnit('m')">m</button>
+            <button class="pill-btn active" id="du-cm"   onclick="setDimUnit('cm')">cm</button>
+            <button class="pill-btn"        id="du-mm"   onclick="setDimUnit('mm')">mm</button>
+            <button class="pill-btn"        id="du-m"    onclick="setDimUnit('m')">m</button>
+            <button class="pill-btn"        id="du-inch" onclick="setDimUnit('inch')">inch</button>
+            <button class="pill-btn"        id="du-feet" onclick="setDimUnit('feet')">feet</button>
+            <button class="pill-btn"        id="du-yard" onclick="setDimUnit('yard')">yard</button>
           </div>
 
           <!-- Name -->
@@ -620,11 +738,14 @@
             <span class="ch-icon">🚢</span>
             <span class="ch-title">Container Type</span>
           </div>
-          <span class="ch-badge badge-cyan" id="con-badge-selected">20' Standard</span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="ch-badge badge-cyan" id="con-badge-selected">20' Standard</span>
+            <button class="btn-sm btn-custom" onclick="openCustomModal()">+ Custom</button>
+          </div>
         </div>
         <div class="card-body">
 
-          <div class="con-grid" style="margin-bottom:14px">
+          <div class="con-grid" id="con-grid" style="margin-bottom:14px">
             <div class="con-option active" id="co-20st" onclick="selectCon('20st')">
               <span class="co-emoji">🟦</span>
               <span class="co-name">20' Standard</span>
@@ -639,6 +760,16 @@
               <span class="co-emoji">🟪</span>
               <span class="co-name">40' High Cube</span>
               <span class="co-cbm">76.3 CBM</span>
+            </div>
+            <div class="con-option" id="co-20rf" onclick="selectCon('20rf')">
+              <span class="co-emoji">❄️</span>
+              <span class="co-name">20' Reefer</span>
+              <span class="co-cbm">26.8 CBM</span>
+            </div>
+            <div class="con-option" id="co-40rf" onclick="selectCon('40rf')">
+              <span class="co-emoji">🧊</span>
+              <span class="co-name">40' Reefer</span>
+              <span class="co-cbm">56.9 CBM</span>
             </div>
           </div>
 
@@ -710,14 +841,57 @@
       </div>
 
       <!-- Results (hidden until calculated) -->
-      <div id="result-area" style="display:none;display:flex;flex-direction:column;gap:18px">
+      <div id="result-area" style="display:none;flex-direction:column;gap:18px">
+
+        <!-- ── SHIPMENT SUMMARY DASHBOARD ── -->
+        <div class="card">
+          <div class="card-head">
+            <div class="ch-left"><span class="ch-icon">📊</span><span class="ch-title">Shipment Summary Dashboard</span></div>
+            <span class="ch-badge badge-green">Live</span>
+          </div>
+          <div class="card-body">
+            <div class="dash-grid">
+              <div class="dash-card">
+                <div class="dc-icon">📦</div>
+                <div class="dc-label">Total Cartons</div>
+                <div class="dc-val" style="color:var(--cyan)" id="d-cartons">—</div>
+                <div class="dc-sub" id="d-cartons-sub">entered</div>
+              </div>
+              <div class="dash-card">
+                <div class="dc-icon">📐</div>
+                <div class="dc-label">Total CBM</div>
+                <div class="dc-val" style="color:var(--green2)" id="d-cbm">—</div>
+                <div class="dc-sub">m³ total volume</div>
+              </div>
+              <div class="dash-card">
+                <div class="dc-icon">⚖️</div>
+                <div class="dc-label">Total Weight</div>
+                <div class="dc-val" style="color:var(--purple2)" id="d-wgt">—</div>
+                <div class="dc-sub" id="d-wgt-sub">gross weight</div>
+              </div>
+              <div class="dash-card">
+                <div class="dc-icon">🚢</div>
+                <div class="dc-label">Recommended</div>
+                <div class="dc-val" style="color:var(--amber);font-size:15px;line-height:1.3" id="d-rec">—</div>
+                <div class="dc-sub">container type</div>
+              </div>
+              <div class="dash-card">
+                <div class="dc-icon">🔢</div>
+                <div class="dc-label">Containers Req.</div>
+                <div class="dc-val" style="color:var(--red2)" id="d-cons-req">—</div>
+                <div class="dc-sub" id="d-cons-sub">for full shipment</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Smart Recommendation -->
         <div class="rec-card" id="rec-card">
           <div class="rec-icon">🏆</div>
-          <div>
+          <div style="flex:1">
             <div class="rec-title" id="rec-title">Smart Recommendation</div>
             <div class="rec-text" id="rec-text">—</div>
+            <ul class="rec-bullets" id="rec-bullets"></ul>
           </div>
         </div>
 
@@ -810,49 +984,83 @@
           </div>
         </div>
 
-        <!-- FREIGHT PLANNER DASHBOARD -->
+        <!-- VOLUME CONVERSIONS -->
         <div class="card">
           <div class="card-head">
-            <div class="ch-left"><span class="ch-icon">📊</span><span class="ch-title">Freight Planner Dashboard</span></div>
+            <div class="ch-left"><span class="ch-icon">🔢</span><span class="ch-title">Volume Conversions — Total Shipment</span></div>
+            <span class="ch-badge badge-purple">All Units</span>
           </div>
           <div class="card-body">
-            <div class="dash-grid">
-              <div class="dash-card">
-                <div class="dc-icon">📦</div>
-                <div class="dc-label">Total Cartons</div>
-                <div class="dc-val" style="color:var(--cyan)" id="d-cartons">—</div>
-                <div class="dc-sub" id="d-cartons-sub">entered</div>
+            <div class="conv-grid" style="margin-bottom:14px">
+              <div class="conv-card">
+                <div class="cc-label">Cubic Metres</div>
+                <div class="cc-val" style="color:var(--cyan)" id="cv-cbm">—</div>
+                <div class="cc-unit">m³ (CBM)</div>
               </div>
-              <div class="dash-card">
-                <div class="dc-icon">📐</div>
-                <div class="dc-label">Total CBM</div>
-                <div class="dc-val" style="color:var(--green2)" id="d-cbm">—</div>
-                <div class="dc-sub">m³ total volume</div>
+              <div class="conv-card">
+                <div class="cc-label">Cubic Feet</div>
+                <div class="cc-val" style="color:var(--green2)" id="cv-cft">—</div>
+                <div class="cc-unit">ft³ (CFT)</div>
               </div>
-              <div class="dash-card">
-                <div class="dc-icon">⚖️</div>
-                <div class="dc-label">Total Weight</div>
-                <div class="dc-val" style="color:var(--purple2)" id="d-wgt">—</div>
-                <div class="dc-sub">gross weight</div>
+              <div class="conv-card">
+                <div class="cc-label">Cubic Inches</div>
+                <div class="cc-val" style="color:var(--amber)" id="cv-cin">—</div>
+                <div class="cc-unit">in³</div>
               </div>
-              <div class="dash-card">
-                <div class="dc-icon">🚢</div>
-                <div class="dc-label">Recommended</div>
-                <div class="dc-val" style="color:var(--amber);font-size:16px" id="d-rec">—</div>
-                <div class="dc-sub">container type</div>
+              <div class="conv-card">
+                <div class="cc-label">Cubic Yards</div>
+                <div class="cc-val" style="color:var(--purple2)" id="cv-cyd">—</div>
+                <div class="cc-unit">yd³</div>
+              </div>
+              <div class="conv-card">
+                <div class="cc-label">Cubic Centimetres</div>
+                <div class="cc-val" style="color:var(--blue2)" id="cv-ccm">—</div>
+                <div class="cc-unit">cm³</div>
               </div>
             </div>
+            <div class="slabel">Volumetric Weight (Chargeable)</div>
+            <div class="volewgt-grid">
+              <div class="volewgt-card">
+                <div class="vw-mode">🌊 Sea Freight</div>
+                <div class="vw-val" style="color:var(--cyan)" id="vw-sea">—</div>
+                <div class="vw-note">Divisor: 1,000 kg/m³</div>
+              </div>
+              <div class="volewgt-card">
+                <div class="vw-mode">✈️ Air Freight</div>
+                <div class="vw-val" style="color:var(--purple2)" id="vw-air">—</div>
+                <div class="vw-note">Divisor: 167 kg/m³ (6000 cm³/kg)</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <div class="divider"></div>
-
-            <!-- Container reference table -->
-            <div class="slabel">Container Specifications Reference</div>
-            <table class="specs-table">
-              <thead>
-                <tr><th>Type</th><th>Internal (cm)</th><th>Max Payload</th><th>Volume</th><th>Space Fit</th><th>Weight Fit</th><th>Actual Fit</th><th>Status</th></tr>
-              </thead>
-              <tbody id="specs-tbody"></tbody>
-            </table>
+        <!-- CONTAINER SPECS TABLE -->
+        <div class="card">
+          <div class="card-head">
+            <div class="ch-left"><span class="ch-icon">📋</span><span class="ch-title">Container Specifications Reference</span></div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div style="overflow-x:auto">
+              <table class="specs-table" style="min-width:750px">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Internal (cm)</th>
+                    <th>Max Payload</th>
+                    <th>Volume</th>
+                    <th>By Space</th>
+                    <th>By Payload</th>
+                    <th>Actual Fit</th>
+                    <th>Space %</th>
+                    <th>Payload %</th>
+                    <th>Ctrs Req.</th>
+                    <th>Overflow</th>
+                    <th>Orientation</th>
+                  </tr>
+                </thead>
+                <tbody id="specs-tbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -882,12 +1090,14 @@
         <div class="card" id="multi-result-card" style="display:none">
           <div class="card-head"><div class="ch-left"><span class="ch-icon">📋</span><span class="ch-title">Multi-Carton Analysis</span></div></div>
           <div class="card-body" style="padding:0">
-            <table class="mres-table">
-              <thead>
-                <tr><th>#</th><th>Carton</th><th>Qty</th><th>CBM/unit</th><th>Total CBM</th><th>Fits in Con.</th><th>Wgt (kg)</th><th>Limit By</th></tr>
-              </thead>
-              <tbody id="mres-tbody"></tbody>
-            </table>
+            <div style="overflow-x:auto">
+              <table class="mres-table" style="min-width:560px">
+                <thead>
+                  <tr><th>#</th><th>Carton</th><th>Qty</th><th>CBM/unit</th><th>Total CBM</th><th>Fits in Con.</th><th>Wgt (kg)</th><th>Limit By</th><th>Space%</th><th>Wgt%</th></tr>
+                </thead>
+                <tbody id="mres-tbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -908,14 +1118,24 @@
 
 // ── Container Presets ─────────────────────────────
 const CONTAINERS = {
-  '20st': { name: "20' Standard",    l: 590,  w: 234, h: 239, payload: 21700, cbm: 33.2,  emoji: '🟦' },
-  '40st': { name: "40' Standard",    l: 1203, w: 234, h: 239, payload: 26680, cbm: 67.7,  emoji: '🟩' },
-  '40hc': { name: "40' High Cube",   l: 1203, w: 234, h: 269, payload: 26330, cbm: 76.3,  emoji: '🟪' },
+  '20st': { name: "20' Standard",  l: 590,  w: 234, h: 239, payload: 21700, cbm: 33.2,  emoji: '🟦' },
+  '40st': { name: "40' Standard",  l: 1203, w: 234, h: 239, payload: 26680, cbm: 67.7,  emoji: '🟩' },
+  '40hc': { name: "40' High Cube", l: 1203, w: 234, h: 269, payload: 26330, cbm: 76.3,  emoji: '🟪' },
+  '20rf': { name: "20' Reefer",    l: 542,  w: 229, h: 215, payload: 21200, cbm: 26.8,  emoji: '❄️' },
+  '40rf': { name: "40' Reefer",    l: 1145, w: 228, h: 218, payload: 27700, cbm: 56.9,  emoji: '🧊' },
 };
 
-// ── Unit Conversion ────────────────────────────────
-const TO_CM  = { cm: 1, mm: 0.1, m: 100 };
+// ── Unit → CM conversion ──────────────────────────
+const TO_CM = {
+  cm:   1,
+  mm:   0.1,
+  m:    100,
+  inch: 2.54,
+  feet: 30.48,
+  yard: 91.44,
+};
 const WGT_TO_KG = { kg: 1, lbs: 0.453592 };
+let customConCount = 0;
 
 // ── State ──────────────────────────────────────────
 let dimUnit   = 'cm';
@@ -947,7 +1167,8 @@ function setDimUnit(u) {
 function selectCon(key) {
   curCon = key;
   document.querySelectorAll('.con-option').forEach(el => el.classList.remove('active'));
-  $('co-' + key).classList.add('active');
+  const el = $('co-' + key);
+  if (el) el.classList.add('active');
   resetConDims();
   $('con-badge-selected').textContent = CONTAINERS[key].name;
 }
@@ -960,6 +1181,33 @@ function resetConDims() {
   $('k-payload').value = c.payload;
   $('k-cbm-disp').value = c.cbm.toFixed(1);
   liveUpdate();
+}
+
+/* ── Custom Container ──────────────────────────── */
+function openCustomModal() { $('custom-modal').classList.add('open'); }
+function closeCustomModal() { $('custom-modal').classList.remove('open'); }
+function closeCustomModalOutside(e) { if (e.target === $('custom-modal')) closeCustomModal(); }
+function addCustomContainer() {
+  const name    = $('cm-name').value.trim();
+  const emoji   = $('cm-emoji').value;
+  const l       = parseFloat($('cm-l').value);
+  const w       = parseFloat($('cm-w').value);
+  const h       = parseFloat($('cm-h').value);
+  const payload = parseFloat($('cm-payload').value);
+  if (!name || !l || !w || !h || !payload) { showToast('Fill all custom container fields', 'e'); return; }
+  customConCount++;
+  const key = 'custom' + customConCount;
+  CONTAINERS[key] = { name, l, w, h, payload, cbm: parseFloat(((l*w*h)/1e6).toFixed(2)), emoji };
+  const grid = $('con-grid');
+  const div = document.createElement('div');
+  div.className = 'con-option'; div.id = 'co-' + key;
+  div.onclick = () => selectCon(key);
+  div.innerHTML = `<span class="co-emoji">${emoji}</span><span class="co-name">${esc(name)}</span><span class="co-cbm">${((l*w*h)/1e6).toFixed(1)} CBM</span>`;
+  grid.appendChild(div);
+  closeCustomModal();
+  selectCon(key);
+  showToast(`✓ Custom container "${name}" added`);
+  $('cm-name').value=''; $('cm-l').value=''; $('cm-w').value=''; $('cm-h').value=''; $('cm-payload').value='';
 }
 
 function getConDims() {
@@ -1021,8 +1269,8 @@ function addCartonToList() {
 
   if (!l || !w || !h) { showToast('Enter dimensions first', 'w'); return; }
 
-  const f = TO_CM[dimUnit] / 100;
-  const lCm = l * f * 100, wCm = w * f * 100, hCm = h * f * 100;
+  const fCm = TO_CM[dimUnit];
+  const lCm = l * fCm, wCm = w * fCm, hCm = h * fCm;
   const unitCBM = (lCm * wCm * hCm) / 1e6;
   const wgtKg   = wgt * WGT_TO_KG[wgtUnit];
 
@@ -1078,25 +1326,24 @@ function calculate() {
     showToast('Enter valid carton dimensions', 'e'); return;
   }
   if (!wgt || wgt <= 0) {
-    showToast('Enter carton weight for payload analysis', 'w');
+    showToast('Enter carton weight for full payload analysis', 'w');
   }
 
-  const f   = TO_CM[dimUnit] / 100;          // cm factor → m  (so /100 again)
-  const fCm = TO_CM[dimUnit];                 // cm factor
-  const cL  = l * fCm, cW = w * fCm, cH = h * fCm;  // in cm
+  const fCm = TO_CM[dimUnit];                          // cm conversion factor
+  const cL  = l * fCm, cW = w * fCm, cH = h * fCm;   // always in cm
   const wgtKg = wgt * WGT_TO_KG[wgtUnit];
 
   const con  = getConDims();
   const fit  = bestFit(cL, cW, cH, con.l, con.w, con.h);
 
-  const unitCBM  = (cL * cW * cH) / 1e6;
+  const unitCBM  = (cL * cW * cH) / 1e6;   // m³
   const totalCBM = unitCBM * qty;
   const totalWgt = wgtKg * qty;
 
-  // ── STEP 3 & 4: payload limit ──────────────────
+  // Space vs payload limit
   const bySpace  = fit.total;
   const byWeight = wgtKg > 0 ? Math.floor(con.payload / wgtKg) : Infinity;
-  const actual   = Math.min(bySpace, byWeight);  // ← THE CORE LOGIC
+  const actual   = Math.min(bySpace, byWeight);
 
   // Utilization
   const spacePct  = bySpace  > 0 ? Math.min((actual * unitCBM) / con.cbm * 100, 100) : 0;
@@ -1111,20 +1358,48 @@ function calculate() {
   const remCBM     = Math.max(0, con.cbm - actual * unitCBM);
   const remWgt     = wgtKg > 0 ? Math.max(0, con.payload - actual * wgtKg) : con.payload;
 
-  // Smart recommendation
-  const rec = smartRecommend(unitCBM * actual, actual * wgtKg);
+  // Volume conversions (total shipment)
+  const totalCFT   = totalCBM * 35.3147;
+  const totalCIN   = totalCBM * 61023.7;
+  const totalCYD   = totalCBM * 1.30795;
+  const totalCCM   = totalCBM * 1e6;
+  const volWgtSea  = totalCBM * 1000;
+  const volWgtAir  = totalCCM / 6000;
+
+  // Smart recommendation (using total shipment)
+  const rec = smartRecommend(totalCBM, totalWgt);
 
   // Save
   lastResult = { actual, bySpace, byWeight, fit, cL, cW, cH, unitCBM, totalCBM,
-    wgtKg, totalWgt, qty, con, spacePct, weightPct, limitBy, consNeeded, overflow, remCBM, remWgt, rec };
+    wgtKg, totalWgt, qty, con, spacePct, weightPct, limitBy, consNeeded, overflow, remCBM, remWgt, rec,
+    totalCFT, totalCIN, totalCYD, totalCCM, volWgtSea, volWgtAir };
 
   // ── RENDER RESULTS ─────────────────────────────
   $('empty-state').style.display = 'none';
-  $('result-area').style.display = 'flex';
+  const ra = $('result-area');
+  ra.style.display = 'flex';
+
+  // Dashboard
+  set('d-cartons', qty.toLocaleString());
+  $('d-cartons-sub').textContent = mcItems.length > 0 ? `${mcItems.length} types` : 'total ordered';
+  set('d-cbm',    totalCBM.toFixed(3) + ' m³');
+  set('d-wgt',    wgtKg > 0 ? totalWgt.toFixed(1) + ' kg' : '—');
+  $('d-wgt-sub').textContent = wgtUnit === 'lbs' ? 'gross weight (converted to kg)' : 'gross weight';
+  set('d-rec',    rec.conName);
+  set('d-cons-req', consNeeded);
+  $('d-cons-sub').textContent = `for ${qty.toLocaleString()} cartons`;
 
   // Recommendation
   $('rec-title').textContent = rec.title;
   $('rec-text').textContent  = rec.text;
+  const bullets = $('rec-bullets');
+  bullets.innerHTML = '';
+  rec.bullets.forEach(b => {
+    const li = document.createElement('li');
+    li.textContent = b.text;
+    li.className = b.type || '';
+    bullets.appendChild(li);
+  });
 
   // Big answer
   $('ans-num').textContent = actual.toLocaleString();
@@ -1164,7 +1439,7 @@ function calculate() {
     + (actual < bySpace ? `<span style="color:var(--amber)">⚠ Payload reduces loadable to ${actual}</span>` : `<span style="color:var(--green2)">✓ No payload reduction</span>`);
 
   // Stats
-  set('s-cons',   consNeeded);
+  set('s-cons',    consNeeded);
   set('s-cons-sub', `for ${qty} cartons`);
   set('s-cbm',    totalCBM.toFixed(3));
   set('s-wgt',    wgtKg > 0 ? totalWgt.toFixed(2) : '—');
@@ -1173,12 +1448,14 @@ function calculate() {
   set('s-rem-wgt', wgtKg > 0 ? remWgt.toFixed(0) : '—');
   set('s-overflow', overflow);
 
-  // Dash
-  set('d-cartons', qty.toLocaleString());
-  $('d-cartons-sub').textContent = mcItems.length > 0 ? `${mcItems.length} types` : 'total ordered';
-  set('d-cbm',  totalCBM.toFixed(3) + ' m³');
-  set('d-wgt',  wgtKg > 0 ? totalWgt.toFixed(1) + ' kg' : '—');
-  set('d-rec',  rec.conName);
+  // Volume Conversions
+  set('cv-cbm', totalCBM.toFixed(4));
+  set('cv-cft', totalCFT.toFixed(3));
+  set('cv-cin', Math.round(totalCIN).toLocaleString());
+  set('cv-cyd', totalCYD.toFixed(4));
+  set('cv-ccm', Math.round(totalCCM).toLocaleString());
+  set('vw-sea', volWgtSea.toFixed(1) + ' kg');
+  set('vw-air', volWgtAir.toFixed(1) + ' kg');
 
   // 3D tags
   $('vtag1').textContent = `${CONTAINERS[curCon].name} — ${con.l}×${con.w}×${con.h} cm`;
@@ -1186,7 +1463,7 @@ function calculate() {
   $('vtag3').textContent = wgtKg > 0 ? `Payload: ${weightPct.toFixed(0)}% used` : 'No weight entered';
 
   // Specs table
-  renderSpecsTable(unitCBM, wgtKg);
+  renderSpecsTable(unitCBM, wgtKg, qty);
 
   // Multi-carton results
   renderMultiResults(con);
@@ -1199,35 +1476,83 @@ function calculate() {
 /* ── Smart Recommendation ──────────────────────── */
 function smartRecommend(usedCBM, usedWgt) {
   let best = null, bestScore = -Infinity;
+  const fits = [];
   Object.entries(CONTAINERS).forEach(([key, con]) => {
-    if (usedCBM <= con.cbm && usedWgt <= con.payload) {
+    const cbmOk = usedCBM <= con.cbm;
+    const wgtOk = usedWgt <= 0 || usedWgt <= con.payload;
+    if (cbmOk && wgtOk) {
       const spaceUtil  = usedCBM / con.cbm;
       const weightUtil = usedWgt > 0 ? usedWgt / con.payload : 0;
       const score = (spaceUtil + weightUtil) / 2;
-      if (score > bestScore) { bestScore = score; best = { key, con, score }; }
+      fits.push({ key, con, score, spaceUtil, weightUtil });
+      if (score > bestScore) { bestScore = score; best = { key, con, score, spaceUtil, weightUtil }; }
     }
   });
+
+  const bullets = [];
+
   if (!best) {
-    const totalVol = usedCBM;
     const big = Object.entries(CONTAINERS).reduce((b, [k,c]) => c.cbm > (b?.[1]?.cbm||0) ? [k,c] : b, null);
-    return { title: '🔁 Multiple Containers Needed', text: `Your cargo needs more than one container. Consider ${big[1].name} for maximum volume per trip.`, conName: big[1].name, key: big[0] };
+    const ctrCount = big ? Math.ceil(usedCBM / big[1].cbm) : '?';
+    const wgtCtrCount = (usedWgt > 0 && big) ? Math.ceil(usedWgt / big[1].payload) : 0;
+    const needed = Math.max(typeof ctrCount === 'number' ? ctrCount : 0, wgtCtrCount);
+    bullets.push({ type: 'warn', text: `Cargo exceeds single container capacity (${usedCBM.toFixed(3)} m³, ${usedWgt.toFixed(0)} kg)` });
+    if (big) bullets.push({ type: 'tip',  text: `Recommend ${needed} × ${big[1].name} (${big[1].cbm} m³ each) for the full load` });
+    if (usedCBM > (big?.[1]?.cbm||0)) bullets.push({ type: 'err', text: 'Total CBM exceeds largest container — consolidation required' });
+    if (usedWgt > 0 && usedWgt > (big?.[1]?.payload||0)) bullets.push({ type: 'err', text: 'Total weight exceeds payload limit — distribute across containers' });
+    return {
+      title: '🔁 Multiple Containers Required',
+      text: `Your cargo exceeds a single container. Minimum ${needed} container(s) needed.`,
+      conName: big ? big[1].name + ` ×${needed}` : 'Split Required',
+      key: big ? big[0] : Object.keys(CONTAINERS).pop(),
+      bullets,
+    };
   }
+
   const pct = (best.score * 100).toFixed(0);
+  if (best.spaceUtil > 0.95)
+    bullets.push({ type: 'warn', text: `Container nearly full (${(best.spaceUtil*100).toFixed(1)}%) — consider splitting if adding more items` });
+  else if (best.spaceUtil < 0.5)
+    bullets.push({ type: 'tip',  text: `Only ${(best.spaceUtil*100).toFixed(1)}% space used — consider LCL consolidation or a smaller container` });
+  else
+    bullets.push({ type: 'ok',   text: `Shipment fits comfortably in one ${best.con.name}` });
+
+  if (usedWgt > 0) {
+    if (best.weightUtil > 0.9)
+      bullets.push({ type: 'warn', text: `Payload nearly at limit (${(best.weightUtil*100).toFixed(1)}%) — verify with carrier` });
+    else
+      bullets.push({ type: 'ok',   text: `Payload ${(best.weightUtil*100).toFixed(1)}% — within safe operating limits` });
+  }
+
+  // Upgrade suggestion
+  const upgrades = fits.filter(f => f.key !== best.key && CONTAINERS[f.key].cbm > best.con.cbm);
+  if (upgrades.length > 0 && best.spaceUtil > 0.75) {
+    const up = upgrades.sort((a,b) => a.con.cbm - b.con.cbm)[0];
+    bullets.push({ type: 'tip',  text: `Consider upgrading to ${up.con.name} (${up.con.cbm} m³) for ${((1-best.spaceUtil)*100).toFixed(0)}% more headroom` });
+  }
+
+  const remCBM = best.con.cbm - usedCBM;
+  if (remCBM > 2) bullets.push({ type: 'ok', text: `${remCBM.toFixed(2)} m³ remaining free space — can accommodate additional items` });
+
   return {
     title: `✅ ${best.con.name} Recommended`,
-    text: `Best fit for your cargo. ${pct}% average utilization of space and payload. Efficient and cost-effective.`,
-    conName: best.con.name, key: best.key,
+    text: `Best fit for your cargo. ${pct}% average utilization of space${usedWgt > 0 ? ' and payload' : ''}.`,
+    conName: best.con.name, key: best.key, bullets,
   };
 }
 
 /* ── Specs Table ───────────────────────────────── */
-function renderSpecsTable(unitCBM, wgtKg) {
+function renderSpecsTable(unitCBM, wgtKg, qty) {
   const tbody = $('specs-tbody');
   tbody.innerHTML = '';
   Object.entries(CONTAINERS).forEach(([key, con]) => {
-    const fit     = bestFit(lastResult.cL, lastResult.cW, lastResult.cH, con.l, con.w, con.h);
-    const byWgt   = wgtKg > 0 ? Math.floor(con.payload / wgtKg) : '—';
-    const actual  = wgtKg > 0 ? Math.min(fit.total, byWgt) : fit.total;
+    const fit       = bestFit(lastResult.cL, lastResult.cW, lastResult.cH, con.l, con.w, con.h);
+    const byWgt     = wgtKg > 0 ? Math.floor(con.payload / wgtKg) : '—';
+    const actualFit = wgtKg > 0 && typeof byWgt === 'number' ? Math.min(fit.total, byWgt) : fit.total;
+    const spcPct    = fit.total > 0 ? Math.min((actualFit * unitCBM) / con.cbm * 100, 100) : 0;
+    const wgtPct    = (wgtKg > 0 && typeof byWgt === 'number') ? Math.min((actualFit * wgtKg) / con.payload * 100, 100) : 0;
+    const ctrReq    = actualFit > 0 ? Math.ceil(qty / actualFit) : '∞';
+    const overflow  = actualFit > 0 ? Math.max(0, qty - actualFit) : qty;
     const isSelected = key === curCon;
     const isRec      = key === lastResult.rec.key;
     const tr = document.createElement('tr');
@@ -1242,8 +1567,12 @@ function renderSpecsTable(unitCBM, wgtKg) {
       <td>${con.cbm} m³</td>
       <td style="color:var(--cyan)">${fit.total}</td>
       <td style="color:var(--amber)">${byWgt}</td>
-      <td style="color:var(--green2);font-weight:700">${actual}</td>
-      <td style="font-size:11px;color:var(--t3)">${fit.total > 0 ? fit.name : 'Too large'}</td>
+      <td style="color:var(--green2);font-weight:700">${actualFit}</td>
+      <td style="color:${spcPct > 90 ? 'var(--amber)' : 'var(--t2)'}">${spcPct.toFixed(1)}%</td>
+      <td style="color:${wgtPct > 90 ? 'var(--amber)' : 'var(--t2)'}">${wgtKg > 0 ? wgtPct.toFixed(1) + '%' : '—'}</td>
+      <td style="color:${ctrReq > 1 ? 'var(--red2)' : 'var(--green2)'};font-weight:700">${ctrReq}</td>
+      <td style="color:${overflow > 0 ? 'var(--red2)' : 'var(--green2)'}">${overflow}</td>
+      <td style="font-size:11px;color:var(--t3)">${fit.total > 0 ? fit.name : '<span style="color:var(--red2)">Too large</span>'}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1260,6 +1589,8 @@ function renderMultiResults(con) {
     const byWgt  = item.wgtKg > 0 ? Math.floor(con.payload / item.wgtKg) : Infinity;
     const actual = Math.min(fit.total, byWgt);
     const limitBy = (byWgt === Infinity) ? 'Space only' : (fit.total <= byWgt ? '✓ Space' : '⚠ Payload');
+    const spcPct = fit.total > 0 ? Math.min((actual * item.unitCBM) / con.cbm * 100, 100) : 0;
+    const wgtPct = item.wgtKg > 0 && byWgt !== Infinity ? Math.min((actual * item.wgtKg) / con.payload * 100, 100) : 0;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${i+1}</td>
@@ -1270,26 +1601,37 @@ function renderMultiResults(con) {
       <td style="color:var(--green2);font-weight:700">${actual}</td>
       <td>${(item.wgtKg * item.qty).toFixed(2)}</td>
       <td style="color:${limitBy.includes('Payload') ? 'var(--amber)' : 'var(--green2)'}">${limitBy}</td>
+      <td>${spcPct.toFixed(1)}%</td>
+      <td>${item.wgtKg > 0 ? wgtPct.toFixed(1) + '%' : '—'}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-/* ── Export ────────────────────────────────────── */
-function exportResults() {
+/* ── Export CSV ────────────────────────────────── */
+function exportCSV() {
   if (!lastResult) { showToast('Calculate first', 'w'); return; }
   const r = lastResult;
   const rows = [
-    ['Smart CBM Container Loading Report'],
+    ['Smart CBM Container Loading Report — ExportHub'],
     ['Generated', new Date().toLocaleString()],
     [],
     ['CARTON DETAILS'],
     ['Dimensions (cm)', `${r.cL.toFixed(1)} × ${r.cW.toFixed(1)} × ${r.cH.toFixed(1)}`],
-    ['Volume / Carton', `${r.unitCBM.toFixed(5)} m³`],
-    ['Weight / Carton', `${r.wgtKg.toFixed(3)} kg`],
+    ['CBM per Carton', `${r.unitCBM.toFixed(5)} m³`],
+    ['Weight per Carton', `${r.wgtKg.toFixed(3)} kg`],
     ['Quantity', r.qty],
     ['Total CBM', `${r.totalCBM.toFixed(4)} m³`],
     ['Total Weight', `${r.totalWgt.toFixed(2)} kg`],
+    [],
+    ['VOLUME CONVERSIONS (TOTAL SHIPMENT)'],
+    ['Cubic Metres (CBM)',  r.totalCBM.toFixed(4)],
+    ['Cubic Feet (CFT)',    r.totalCFT.toFixed(3)],
+    ['Cubic Inches',       Math.round(r.totalCIN)],
+    ['Cubic Yards',        r.totalCYD.toFixed(4)],
+    ['Cubic Centimetres',  Math.round(r.totalCCM)],
+    ['Vol. Weight Sea (1000 kg/m³)', `${r.volWgtSea.toFixed(1)} kg`],
+    ['Vol. Weight Air (6000 cm³/kg)',`${r.volWgtAir.toFixed(1)} kg`],
     [],
     ['CONTAINER'],
     ['Type', CONTAINERS[curCon].name],
@@ -1298,26 +1640,42 @@ function exportResults() {
     ['Gross CBM', `${r.con.cbm} m³`],
     [],
     ['RESULTS'],
-    ['Cartons by Space', r.bySpace],
+    ['Cartons by Space',   r.bySpace],
     ['Cartons by Payload', r.byWeight === Infinity ? 'N/A' : r.byWeight],
-    ['ACTUAL LOADABLE (MIN)', r.actual],
-    ['Limited By', r.limitBy.toUpperCase()],
-    ['Space Utilization', `${r.spacePct.toFixed(1)}%`],
-    ['Payload Utilization', `${r.weightPct.toFixed(1)}%`],
-    ['Remaining CBM', `${r.remCBM.toFixed(3)} m³`],
-    ['Remaining Payload', `${r.remWgt.toFixed(0)} kg`],
-    ['Containers Needed', r.consNeeded],
-    ['Overflow Cartons', r.overflow],
-    ['Best Orientation', r.fit.name],
-    ['Arrangement', `${r.fit.aL} × ${r.fit.aW} × ${r.fit.aH}`],
+    ['ACTUAL LOADABLE',    r.actual],
+    ['Limited By',         r.limitBy.toUpperCase()],
+    ['Space Utilization',  `${r.spacePct.toFixed(1)}%`],
+    ['Payload Utilization',`${r.weightPct.toFixed(1)}%`],
+    ['Remaining CBM',      `${r.remCBM.toFixed(3)} m³`],
+    ['Remaining Payload',  `${r.remWgt.toFixed(0)} kg`],
+    ['Containers Needed',  r.consNeeded],
+    ['Overflow Cartons',   r.overflow],
+    ['Best Orientation',   r.fit.name],
+    ['Arrangement',        `${r.fit.aL} × ${r.fit.aW} × ${r.fit.aH}`],
     ['Recommended Container', r.rec.conName],
   ];
+  if (mcItems.length) {
+    rows.push([]);
+    rows.push(['MULTI-CARTON LIST']);
+    rows.push(['#','Name','L(cm)','W(cm)','H(cm)','Qty','CBM/unit','Total CBM','Wgt(kg)']);
+    mcItems.forEach((item,i) => rows.push([
+      i+1, item.name, item.lCm.toFixed(1), item.wCm.toFixed(1), item.hCm.toFixed(1),
+      item.qty, item.unitCBM.toFixed(4), item.totalCBM.toFixed(4), (item.wgtKg*item.qty).toFixed(2)
+    ]));
+  }
   const csv = rows.map(r => Array.isArray(r) ? r.map(v=>`"${v}"`).join(',') : `"${r}"`).join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = `Container_Loading_Report_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `CBM_Loading_Report_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   showToast('✓ Report exported as CSV');
+}
+
+/* ── Export PDF (Print) ────────────────────────── */
+function exportPDF() {
+  if (!lastResult) { showToast('Calculate first to generate report', 'w'); return; }
+  showToast('Opening print dialog for PDF…', 's');
+  setTimeout(() => window.print(), 400);
 }
 
 /* ── Toast ─────────────────────────────────────── */

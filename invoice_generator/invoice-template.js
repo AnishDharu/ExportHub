@@ -122,7 +122,11 @@ async function exportToExcel(invoice, items) {
     const notesStart = 23 + items.length + 3;
     invoice.product_notes.split('\n').forEach((line, i) => {
       const row = notesStart + i;
-      if (row <= 42) ws.getCell(row, 3).value = line.trim();
+      if (row <= 42) {
+        const noteCell = ws.getCell(row, 3);
+        noteCell.value = line.trim();
+        noteCell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+      }
     });
   }
 
